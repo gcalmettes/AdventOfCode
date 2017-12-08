@@ -6,7 +6,7 @@ import re
 from collections import defaultdict
 
 
-ex = """root (10) -> aa, bb, cc
+tricky_ex = """root (10) -> aa, bb, cc
 aa (21) -> aaa, aaaa, aaaaa
 bb (320) -> bbb, bbbb, bbbbb
 cc (320) -> ccc, cccc, ccccc
@@ -128,6 +128,8 @@ def calculateBalance(s):
 
     levels = sorted([int(key) for key in networkLevels.keys()])
 
+    # ensure that balance is calculated over all the childs and their dependant
+    # (so this won't break even with tricky examples like the tricky_ex input)
     i = len(levels)-2 #second to last index
     if i<0:
         return "No network"
