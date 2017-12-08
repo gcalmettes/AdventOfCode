@@ -1,7 +1,11 @@
+"""
+http://adventofcode.com/2017/day/6
+"""
+
 import numpy as np
 from collections import defaultdict
 
-FIRST_INPUT = """14	0	15	12	11	11	3	5	1	6	8	4	9	1	8	4"""
+INPUT = """14	0	15	12	11	11	3	5	1	6	8	4	9	1	8	4"""
 
 # part 1
 def getInitialMemory(s):
@@ -33,8 +37,6 @@ def reallocateMemory(s):
     return len(allStates)
 
 
-print(reallocateMemory(FIRST_INPUT))
-
 # part2
 
 def reallocateMemoryCycle(s):
@@ -52,4 +54,9 @@ def reallocateMemoryCycle(s):
     return (len(allStates) + 1) - (allStates[newAllocation][1]-(len(allStates)+1)) + 1
 
 
-print(reallocateMemoryCycle(FIRST_INPUT))
+
+if __name__ == "__main__":
+    # part 1
+    print(reallocateMemory(INPUT))
+    # part 2
+    print(reallocateMemoryCycle(INPUT))

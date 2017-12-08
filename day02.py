@@ -1,7 +1,11 @@
+"""
+http://adventofcode.com/2017/day/2
+"""
+
 import numpy as np
 import itertools
 
-FIRST_INPUT = """409	194	207	470	178	454	235	333	511	103	474	293	525	372	408	428
+INPUT = """409	194	207	470	178	454	235	333	511	103	474	293	525	372	408	428
 4321	2786	6683	3921	265	262	6206	2207	5712	214	6750	2742	777	5297	3764	167
 3536	2675	1298	1069	175	145	706	2614	4067	4377	146	134	1930	3850	213	4151
 2169	1050	3705	2424	614	3253	222	3287	3340	2637	61	216	2894	247	3905	214
@@ -19,17 +23,12 @@ FIRST_INPUT = """409	194	207	470	178	454	235	333	511	103	474	293	525	372	408	428
 3858	202	1141	3458	2507	239	199	4400	3713	3980	4170	227	3968	1688	4352	4168"""
 
 
-#part 1
 def to_array(s):
     return np.array([[int(x) for x in row.split("\t")] for row in s.split("\n")])
 
 def checksum(s):
     diffMaxMin = [np.max(row)-np.min(row) for row in to_array(s)]
     return np.sum(diffMaxMin)
-
-print(checksum(FIRST_INPUT))
-
-#part 2
 
 def sumDividend(s):
     lines = to_array(s)
@@ -47,4 +46,10 @@ def sumDividend(s):
             sum += b//a
     return sum
 
-print(sumDividend(FIRST_INPUT))
+
+if __name__ == "__main__":
+    # part 1
+    print(checksum(INPUT))
+    # part 2
+    print(sumDividend(INPUT))
+

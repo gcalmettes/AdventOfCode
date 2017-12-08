@@ -1,10 +1,14 @@
+"""
+http://adventofcode.com/2017/day/3
+"""
+
 from collections import defaultdict
 
 """
 Super hacky and ugly code, but does the job ...
 """
 
-FIRST_INPUT = 265149
+INPUT = 265149
 
 def nInRing(idx):
     """
@@ -85,8 +89,6 @@ def getTaxiDist(n):
     x,y = getCoords(n)
     return abs(x) + abs(y)
 
-print(FIRST_INPUT, getTaxiDist(FIRST_INPUT))
-
 # part 2
 
 def getNeighbors(coords):
@@ -117,4 +119,10 @@ def getFirstHigherValue(n):
             smaller=False
             print(value)
 
-getFirstHigherValue(FIRST_INPUT)
+
+if __name__ == "__main__":
+    # part 1
+    print(getTaxiDist(INPUT))
+
+    # part 2
+    getFirstHigherValue(INPUT)
