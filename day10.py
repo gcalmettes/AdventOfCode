@@ -4,8 +4,6 @@ http://adventofcode.com/2017/day/10
 
 import numpy as np
 
-startingList = np.arange(256)
-
 def makeKnot(numberList, position, length):
 	listToKnot = np.array(numberList[:])
 	indices = np.arange(position, position+length)%len(numberList)
