@@ -2,52 +2,6 @@
 http://adventofcode.com/2017/day/9
 """
 
-# def countValid(str):
-#     count = 0
-#     for i in str:
-#         if i == "{":
-#             count += 1
-#         elif i == "}":
-#             count -= 1
-#         if count < 0:
-#             return False
-#     return count == 0
-#
-# def evaluate(str):
-#   stack = []
-#   pushChars, popChars = "<({[", ">)}]"
-#   for c in str :
-#     if c in pushChars :
-#       stack.append(c)
-#     elif c in popChars :
-#       if not len(stack) :
-#         return False
-#       else :
-#         stackTop = stack.pop()
-#         balancingBracket = pushChars[popChars.index(c)]
-#         if stackTop != balancingBracket :
-#           return False
-#     else :
-#       return False
-#   return not len(stack)
-#
-# def find_parens(s):
-#     toret = {}
-#     pstack = []
-#
-#     for i, c in enumerate(s):
-#         if c == '{':
-#             pstack.append(i)
-#         elif c == '}':
-#             if len(pstack) == 0:
-#                 raise IndexError("No matching closing parens at: " + str(i))
-#             toret[pstack.pop()] = i
-#
-#     if len(pstack) > 0:
-#         raise IndexError("No matching opening parens at: " + str(pstack.pop()))
-#
-#     return toret
-
 def cleanStream(stream):
 	streamToClean = stream[:]
 	isCleaned = False
