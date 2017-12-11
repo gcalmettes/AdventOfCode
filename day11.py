@@ -43,24 +43,22 @@ def calculDistanceAway(x: int, y: int) -> int:
 	return distance
 
 
-testPosition = Position()
-assert movePath(testPosition, "ne,ne,ne").distanceAway == 3
-assert movePath(testPosition, "se,se,se").distanceAway == 3
-assert movePath(testPosition, "ne,ne,sw,sw").distanceAway == 0
-assert movePath(testPosition, "ne,ne,s,s").distanceAway == 2
-assert movePath(testPosition, "se,sw,se,sw,sw").distanceAway == 3
-assert movePath(testPosition, "s,s,s,s,n,s").distanceAway == 4
-assert movePath(testPosition, "se,se,se,se,se,s,nw").distanceAway == 5
-assert movePath(testPosition, "ne,se,s,nw,n,ne,nw,sw").distanceAway == 1
-assert movePath(testPosition, "se,se,se,se,se,ne,ne,ne,ne,ne").distanceAway == 10
+assert movePath(Position(), "ne,ne,ne").distanceAway == 3
+assert movePath(Position(), "se,se,se").distanceAway == 3
+assert movePath(Position(), "ne,ne,sw,sw").distanceAway == 0
+assert movePath(Position(), "ne,ne,s,s").distanceAway == 2
+assert movePath(Position(), "se,sw,se,sw,sw").distanceAway == 3
+assert movePath(Position(), "s,s,s,s,n,s").distanceAway == 4
+assert movePath(Position(), "se,se,se,se,se,s,nw").distanceAway == 5
+assert movePath(Position(), "ne,se,s,nw,n,ne,nw,sw").distanceAway == 1
+assert movePath(Position(), "se,se,se,se,se,ne,ne,ne,ne,ne").distanceAway == 10
 
 
 
 if __name__ == '__main__':
 	with open("day11_input.txt") as f:
 		path = f.read().strip()
-	pos = Position()
-	pos = movePath(pos, path)
+	pos = movePath(Position(), path)
 	# part 1
 	print(pos.distanceAway)
 	# part 2
