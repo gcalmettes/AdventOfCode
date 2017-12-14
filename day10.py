@@ -36,6 +36,13 @@ def convert(sparseHash):
 		hashKnot = hashKnot+hexKnot
 	return hashKnot
 
+def makeHash(input: str):
+	EXTRA_LENGTHS = """17,31,73,47,23"""
+	lengths = [int(ord(character)) for character in INPUT] + [int(length) for length in EXTRA_LENGTHS.split(",")]
+	lengths = lengths * 64
+	sparseHash = makeAllKnots(np.arange(256), lengths)
+	knotHash = convert(sparseHash)
+	return knotHash
 
 
 if __name__ == "__main__":
@@ -48,8 +55,4 @@ if __name__ == "__main__":
 	print(finalHash[0]*finalHash[1])
 
 	# part 2
-	EXTRA_LENGTHS = """17,31,73,47,23"""
-	lengths2 = [int(ord(character)) for character in INPUT] + [int(length) for length in EXTRA_LENGTHS.split(",")]
-	lengths2 = lengths2 * 64
-	sparseHash = makeAllKnots(np.arange(256), lengths2)
-	print(convert(sparseHash))
+	print(makeHash(INPUT))
