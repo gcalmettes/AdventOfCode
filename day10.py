@@ -38,7 +38,7 @@ def convert(sparseHash):
 
 def makeHash(input: str):
 	EXTRA_LENGTHS = """17,31,73,47,23"""
-	lengths = [int(ord(character)) for character in INPUT] + [int(length) for length in EXTRA_LENGTHS.split(",")]
+	lengths = [int(ord(character)) for character in input] + [int(length) for length in EXTRA_LENGTHS.split(",")]
 	lengths = lengths * 64
 	sparseHash = makeAllKnots(np.arange(256), lengths)
 	knotHash = convert(sparseHash)
