@@ -1,11 +1,10 @@
 function* generator(initial, factor, condition = (val) => true){
-    let prev = initial;
+    let val = initial;
     while (true) {
-        let next = (prev*factor) % 2147483647;
-        if (condition(next)) {
-            yield next;
+        val = (val*factor) % 2147483647;
+        if (condition(val)) {
+            yield val;
         };
-        prev = next;
     };
 };
 
