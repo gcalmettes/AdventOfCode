@@ -57,17 +57,17 @@ if __name__ == '__main__':
         
         # part 2
 
-        # # computing was too long, so checked if input was cycling
+        # # computing was too long, so I checked if input was cycling
         # # it was! every 42 iterations we ended up with the initial input
-        # programs = programs_initial[:]
-        # for i in range(1000000000):
-        #     if programs==programs_initial:
-        #         print(i)
-        #     programs = makeDance(programs, moves)
-        # # return 0, 42, 84, etc
+        programs = programs_initial[:]
+        for i in range(1000000000):
+            if programs==programs_initial and i != 0:
+                cycleLength = i
+                break
+            programs = makeDance(programs, moves)
 
         programs = programs_initial[:]
-        for i in range(1000000000%42):
+        for i in range(1000000000%cycleLength):
             programs = makeDance(programs, moves)
         
         print(programs)
