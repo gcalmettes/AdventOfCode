@@ -1,4 +1,4 @@
-function* generator(initial, factor, condition = (val) => val == val){
+function* generator(initial, factor, condition = (val) => true){
     let prev = initial;
     while (true) {
         let next = (prev*factor) % 2147483647;
