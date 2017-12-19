@@ -31,14 +31,13 @@ def navigateGrid(inputMap: List[str]):
 
     while pathLeft:
         nextPt = inputMap[path.row][path.col]
-        # print(nextPt)
-        
+
         if nextPt == "|" or nextPt == "-":
             # continue horizontal or vertical movement
             path.row += path.dir[0]
             path.col += path.dir[1]
             path.steps+=1
-        
+
         elif nextPt == "+":
             # change direction
             if path.dir[0] != 0: # if it was vertical movement
@@ -47,7 +46,10 @@ def navigateGrid(inputMap: List[str]):
                 except IndexError:
                     nextStepRight = " "
                 try:
-                    nextStepLeft = inputMap[path.row][path.col-1]
+                	if path.col-1<0:
+                		nextStepLeft = " "
+                	else:
+                		nextStepLeft = inputMap[path.row][path.col-1]
                 except IndexError:
                     nextStepLeft = " "
 
@@ -55,13 +57,14 @@ def navigateGrid(inputMap: List[str]):
                     path.dir = (0, 1) # go to the right
                     path.row += path.dir[0]
                     path.col += path.dir[1]
-                    
+
                 elif nextStepRight == " " and nextStepLeft != " ":
                     path.dir = (0, -1) # go to the left
                     path.row += path.dir[0]
                     path.col += path.dir[1]
                 else:
                     print(f"Unknown direction")
+                    pathLeft = False
                 path.steps+=1
 
             elif path.dir[1] != 0: # if it was horizontal movement
@@ -70,7 +73,10 @@ def navigateGrid(inputMap: List[str]):
                 except IndexError:
                     nextStepDown = " "
                 try:
-                    nextStepUp = inputMap[path.row-1][path.col]
+                	if path.row-1 < 0:
+                		nextStepUp = " "
+                	else:
+                		nextStepUp = inputMap[path.row-1][path.col]
                 except IndexError:
                     nextStepUp = " "
 
@@ -84,6 +90,7 @@ def navigateGrid(inputMap: List[str]):
                     path.col += path.dir[1]
                 else:
                     print(f"Unknown direction")
+                    pathLeft = False
                 path.steps+=1
 
         elif nextPt in string.ascii_letters:
