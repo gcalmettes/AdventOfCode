@@ -117,6 +117,7 @@ TEST_INPUT = """     |
      |  |  |  D 
      +B-+  +--+ 
 """
+
 assert navigateGrid(TEST_INPUT.split("\n")).letters == ["A", "B", "C", "D", "E", "F"]
 
 
