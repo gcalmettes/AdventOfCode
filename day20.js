@@ -4,9 +4,9 @@ const data = require("./day20_input.js")
 function getParticles(input) {
     return input.split("\n")
             .map(line => {
-                const [px, py, pz, vx, vy, vz ,ax, ay, az] = line.match(
+                const [, px, py, pz, vx, vy, vz ,ax, ay, az] = line.match(
                     /p=<([\d-]+),([\d-]+),([\d-]+)>, v=<([\d-]+),([\d-]+),([\d-]+)>, a=<([\d-]+),([\d-]+),([\d-]+)>/
-                  ).slice(1).map(Number)
+                  ).map(Number)
                 return {p: [px, py, pz], v: [vx, vy, vz], a: [ax, ay, az]}
                 }
             )
@@ -29,10 +29,7 @@ function tick(particle) {
 }
 
 function filterOutCollided(particles){
-    let countMap = {}
-    for (let i=0; i<particles.length; i++){
-        countMap[particles[i].p] = (countMap[particles[i].p] || 0) + 1
-    }
+    let countMap = particles.reduce((dict, d) => {dict[d.p] = (dict[d.p] || 0) + 1; return dict}, {})
     return particles.filter(d => countMap[d.p]==1)
 }
 
@@ -42,11 +39,11 @@ function runSimulation(particlesList, nStable = 20) {
                 n: Infinity,
                 iterations_since_stable: 0
             }
-    
+
     while (state.iterations_since_stable < nStable) {
         particles = filterOutCollided(particles.map(particle => tick(particle)))
         if (state.n == particles.length) {
-            state.iterations_since_stable +=1 
+            state.iterations_since_stable +=1
         } else {
             state.n = particles.length
         }
