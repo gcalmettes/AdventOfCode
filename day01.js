@@ -11,3 +11,5 @@ console.log(INPUT.split("").reduce((checksum, s, i) => checksum += s == INPUT[(i
 
 // part 2
 console.log(INPUT.split("").reduce((checksum, s, i) => checksum += s == INPUT[(i+INPUT.length/2)%INPUT.length] ? parseInt(s) : 0, 0))
+// other version for part 2
+console.log(INPUT.substr(INPUT.length/2).split("").reduce((checksum, s, i) => checksum += s == INPUT[i] ? parseInt(s)*2 : 0, 0))
