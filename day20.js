@@ -1,5 +1,8 @@
-const data = require("./day20_input.js")
+`
+http://adventofcode.com/2017/day/20
+`
 
+const data = require("./day20_input.js")
 
 function getParticles(input) {
     return input.split("\n")
