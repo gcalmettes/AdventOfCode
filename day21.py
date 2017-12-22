@@ -4,7 +4,7 @@ http://adventofcode.com/2017/day/21
 
 import copy
 import functools
-from typing import Tuple, List
+from typing import Tuple, List, Dict
 
 def convertInput(input: str) -> List[List[str]]:
     return [[c for c in line] for line in input.split("\n")]
@@ -57,7 +57,7 @@ def concatenatePixels(pixels: List[List[str]], nCols:int) -> List[List[str]]:
 
     return lines
 
-def fractilize(startingPattern: List[List[str]], rules: List[List[str]]) -> List[List[str]]:
+def fractilize(startingPattern: List[List[str]], rules: List[List[str]], rules_config: Dict) -> List[List[str]]:
     pattern = copy.deepcopy(startingPattern)
     size = len(pattern)
     print(f"### fractilize size entry: {size}")
@@ -77,7 +77,7 @@ def fractilize(startingPattern: List[List[str]], rules: List[List[str]]) -> List
     print(f"obtained {nPixels} pixels of size {len(divided[0][0])}x{len(divided[0][0])}")
     output = [[] for i in range(nPixels)]
     for j in range(nPixels):
-        toApply = [rule for k,rule in enumerate(rules) if divided[j] in getAllRotations(rules[k][0])]
+        toApply = [rule for k,rule in enumerate(rules) if divided[j] in rules_config[str(rules[k])]]
         if len(toApply)<=0:
             print(f"no match for pattern {j}")
             print(divided[j])
@@ -90,12 +90,16 @@ def fractilize(startingPattern: List[List[str]], rules: List[List[str]]) -> List
     return pattern
 
 def iterate(startingPattern: List[List[str]], rules: List[List[str]], n: int = 5):
+
+    # get dictionnary of all the rules -> all rotations/flips
+    rules_config = {str(rule): getAllRotations(rule[0]) for rule in rules}
+
     i = 0
     pattern = copy.deepcopy(startingPattern)
     while i<n:
         print(" ")
         print(f"iteration {i}")
-        pattern = fractilize(pattern, rules)
+        pattern = fractilize(pattern, rules, rules_config)
         i+=1
     return pattern
 
@@ -121,13 +125,14 @@ if __name__ == "__main__":
         patterns = f.readlines()
     allRules = [getRule(pattern) for pattern in patterns]
 
-    # part 1
     input = convertInput(START)
+
+    # part 1
+    
     final_part1 = iterate(input, allRules, 5)
     print(countPixels(final_part1))
 
+    # part 2 (take some time to run)
     final_part2 = iterate(input, allRules, 18)
     print(countPixels(final_part2 ))
-
-
     
