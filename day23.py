@@ -1,5 +1,5 @@
 """
-http://adventofcode.com/2017/day/18
+http://adventofcode.com/2017/day/23
 """
 
 from typing import List, Dict, NamedTuple
