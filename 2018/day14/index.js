@@ -28,8 +28,7 @@ const getScoreboard = (r1, r2, nSteps) => {
   let s = 0
   while (s<nSteps) {
     // add new recipes to board
-    getNewRecipesFrom(board[pos1], board[pos2])
-      .forEach(r => board.push(r))
+    board.push.apply(board, getNewRecipesFrom(board[pos1], board[pos2]))
     pos1 = moveTo(pos1, board)
     pos2 = moveTo(pos2, board)
     s++
