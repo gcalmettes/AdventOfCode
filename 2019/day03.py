@@ -1,3 +1,7 @@
+"""
+https://adventofcode.com/2019/day/3
+"""
+
 from dataclasses import dataclass
 from collections import namedtuple
 from typing import Set, List
