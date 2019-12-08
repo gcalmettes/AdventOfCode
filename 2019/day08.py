@@ -49,7 +49,7 @@ def decode_image(data:str, layer_width: int, layer_height: int) -> List[str]:
                     final_image += ' '
                     break
                 elif val == '1':
-                    final_image += '.'
+                    final_image += '#'
                     break
                 else:
                     raise ValueError('Wrong')
