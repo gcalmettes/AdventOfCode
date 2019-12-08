@@ -41,8 +41,7 @@ def decode_image(data:str, layer_width: int, layer_height: int) -> List[str]:
     
     pixels = [[layer[i] for layer in layers] for i in range(image_size)]
     final_image = ''
-    count = 0
-    for pixel in pixels:
+    for i, pixel in enumerate(pixels):
         for val in pixel:
             if val != '2': # not transparent
                 if val == '0':
@@ -53,8 +52,8 @@ def decode_image(data:str, layer_width: int, layer_height: int) -> List[str]:
                     break
                 else:
                     raise ValueError('Wrong')
-        count += 1
-        if (count != 0) and (count % layer_width == 0):
+        if (i != 0) and ((i+1) % layer_width == 0):
+            # new line
             final_image += '\n'
     return final_image
 
