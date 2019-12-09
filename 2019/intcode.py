@@ -45,10 +45,6 @@ def get_value(program: Program, pos: int, mode: int) -> int:
 def run_intcode(program: Program, inputs=[1]) -> int:
     program = program[:]
 
-    # # reset program
-    # for pos, value in input:
-    #     program[pos] = value
-
     #
     cursor = 0
     output = []
@@ -63,34 +59,34 @@ def run_intcode(program: Program, inputs=[1]) -> int:
             p2 = get_value(program, cursor+2, modes[1])
             program[program[cursor+3]] = p1 + p2
             cursor += 4
-        if opcode == Opcode.MULTIPLY:
+        elif opcode == Opcode.MULTIPLY:
             p1 = get_value(program, cursor+1, modes[0])
             p2 = get_value(program, cursor+2, modes[1])
             program[program[cursor+3]] = p1 * p2
             cursor += 4
-        if opcode == Opcode.INPUT:
+        elif opcode == Opcode.INPUT:
             in_value = inputs.pop()
             program[program[cursor+1]] = in_value
             cursor += 2
-        if opcode == Opcode.OUTPUT:
+        elif opcode == Opcode.OUTPUT:
             p1 = get_value(program, cursor+1, modes[0])
             output += [p1]
             cursor += 2
-        if opcode == Opcode.JUMP_IF_TRUE:
+        elif opcode == Opcode.JUMP_IF_TRUE:
             p1 = get_value(program, cursor+1, modes[0])
             p2 = get_value(program, cursor+2, modes[1])
             if p1 != 0:
                 cursor = p2
             else:
                 cursor += 3
-        if opcode == Opcode.JUMP_IF_FALSE:
+        elif opcode == Opcode.JUMP_IF_FALSE:
             p1 = get_value(program, cursor+1, modes[0])
             p2 = get_value(program, cursor+2, modes[1])
             if p1 == 0:
                 cursor = p2
             else:
                 cursor += 3
-        if opcode == Opcode.LESS_THAN:
+        elif opcode == Opcode.LESS_THAN:
             p1 = get_value(program, cursor+1, modes[0])
             p2 = get_value(program, cursor+2, modes[1])
             # p3 = get_value(program, cursor+3, modes[2])
@@ -99,7 +95,7 @@ def run_intcode(program: Program, inputs=[1]) -> int:
             else:
                 program[program[cursor+3]] = 0
             cursor += 4
-        if opcode == Opcode.EQUALS:
+        elif opcode == Opcode.EQUALS:
             p1 = get_value(program, cursor+1, modes[0])
             p2 = get_value(program, cursor+2, modes[1])
             # p3 = get_value(program, cursor+3, modes[2])
@@ -108,8 +104,10 @@ def run_intcode(program: Program, inputs=[1]) -> int:
             else:
                 program[program[cursor+3]] = 0
             cursor += 4
-        if opcode == Opcode.HALT:
+        elif opcode == Opcode.HALT:
             break
+        else:
+            raise ValueError(f'Incorrect opcode {opcode}')
 
 
     return program[0], output
