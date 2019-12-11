@@ -15,38 +15,29 @@ class Robot:
     x: int = 0
     y: int = 0
     cursor: int = 0
-    facing: str = 'up'
 
     def advance(self, instruction: int) -> Tuple[int, int]:
-        # facing = self.facings[self.cursor % 4]
-        facing = self.facing
+        facing = ['up', 'left', 'down', 'right'][self.cursor % 4]
         if instruction == 0:  # turn left
             if facing == 'up':
                 self.x -= 1 # go left
-                self.facing = 'left'
             elif facing == 'left':
                 self.y += 1 # go down
-                self.facing = 'down'
             elif facing == 'down':
                 self.x += 1 # go right
-                self.facing = 'right'
             elif facing == 'right':
                 self.y -= 1 # go up
-                self.facing = 'up'
+            self.cursor += 1
         elif instruction == 1:  # turn right
             if facing == 'up':
                 self.x += 1 # go right
-                self.facing = 'right'
             elif facing == 'right':
                 self.y += 1 # go down
-                self.facing = 'down'
             elif facing == 'down':
                 self.x -= 1 # go left
-                self.facing = 'left'
             elif facing == 'left':
                 self.y -= 1 # go up
-                self.facing = 'up'
-        self.cursor += 1
+            self.cursor -= 1
         return self.x, self.y   
 
 
