@@ -44,6 +44,9 @@ class IntcodeComputer:
 
         return Opcode(opcode_part), modes
 
+    def add_input(self, input:int):
+        self.inputs.append(input)
+
     def get_value(self, address: int, mode: int) -> int:
         if mode == ParameterMode.POSITION:
             return self.memory[self.memory[address]]
