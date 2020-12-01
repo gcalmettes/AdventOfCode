@@ -12,8 +12,8 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	for i, e1 := range expenses {
-		for j, e2 := range expenses[i:] {
+	for i, e1 := range expenses[:len(expenses)-2] {
+		for j, e2 := range expenses[i : len(expenses)-1] {
 			for _, e3 := range expenses[j:] {
 				total := e1 + e2 + e3
 				if total == 2020 {

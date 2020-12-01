@@ -12,7 +12,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	for i, e1 := range expenses {
+	for i, e1 := range expenses[:len(expenses)-1] {
 		for _, e2 := range expenses[i:] {
 			total := e1 + e2
 			if total == 2020 {
