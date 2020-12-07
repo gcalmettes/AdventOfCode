@@ -20,9 +20,6 @@ func main() {
 	cToP := make(map[string][]string)
 	for _, parent := range pToC {
 		for child, _ := range parent.content {
-			if _, exists := cToP[child]; !exists {
-				cToP[child] = []string{}
-			}
 			cToP[child] = append(cToP[child], parent.color)
 
 		}
