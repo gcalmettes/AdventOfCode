@@ -30,7 +30,6 @@ func main() {
 	}
 
 	start := 0
-	stop := false
 	for data[start] < res {
 		end := start + 1
 		for data[end] < res {
@@ -44,15 +43,8 @@ func main() {
 					fmt.Printf("%v = %d\n", numbers, res)
 					fmt.Printf("%d + %d = %d\n", numbers[0], numbers[len(numbers)-1], numbers[0]+numbers[len(numbers)-1])
 
-					stop = true
-					break
+					return
 				}
-				if stop {
-					break
-				}
-			}
-			if stop {
-				break
 			}
 			end++
 		}
