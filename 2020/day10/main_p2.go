@@ -28,8 +28,11 @@ func main() {
 	}
 
 	// dynamic programming
-	// Let's consider 0, 1, 2, 3
-	// to go to 2
+	// we cannot go further than 3 steps, so if a number is present in the adpators, the numbers
+	// of ways to get to it is the sum of the numbers of ways to go to the three preceeding numbers.
+	// ex: if 34-35-36-37 are presents, then to go to 37 we come from either 34-37, 35-37 or 36-37,
+	// meaning that we have to add all the ways to go to 34, 35 and 36 to know the numbers of ways
+	// to go to 37.
 	max := data[len(data)-1]
 	nPaths := make([]int, max)
 	nPaths[0] = 1 // only one way to go to one
