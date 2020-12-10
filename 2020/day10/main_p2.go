@@ -14,55 +14,49 @@ func main() {
 		fmt.Errorf("could not read input: %v", err)
 	}
 
-	var res int
-	l := len(data)
-	w := 25
-	current := 0 + w
-	for current < l {
-		slice := data[current-w : current]
-		target := data[current]
-		v := isValid(slice, target)
-		if !v {
-			res = target
-			break
-		}
-		current++
+	sort.Ints(data)
+	// add outlet
+	data = append([]int{0}, data...)
+	// add device
+	device := data[len(data)-1] + 3
+	data = append(data, device)
+
+	// Make it a map for faster checking
+	hash := map[int]bool{}
+	for _, n := range data {
+		hash[n] = true
 	}
 
-	start := 0
-	for data[start] < res {
-		end := start + 1
-		for data[end] < res {
-			result := 0
-			s := data[start:end]
-			for j, v := range s {
-				result += v
-				if result == res {
-					numbers := s[:j+1]
-					sort.Ints(numbers)
-					fmt.Printf("%v = %d\n", numbers, res)
-					fmt.Printf("%d + %d = %d\n", numbers[0], numbers[len(numbers)-1], numbers[0]+numbers[len(numbers)-1])
+	// dynamic programming
+	// Let's consider 0, 1, 2, 3
+	// to go to 2
+	max := data[len(data)-1]
+	nPaths := make([]int, max)
+	nPaths[0] = 1 // only one way to go to one
 
-					return
-				}
-			}
-			end++
-		}
-		start++
-	}
-}
+	if hash[1] {
 
-func isValid(in []int, target int) bool {
-	var valid bool
-	for i, e1 := range in[:len(in)-1] {
-		for _, e2 := range in[i:] {
-			total := e1 + e2
-			if total == target {
-				valid = true
-			}
-		}
+		nPaths[1] = 1 // 0-1
 	}
-	return valid
+
+	if hash[2] && hash[1] {
+
+		nPaths[2] = 2 // 0-1-2 || 0-2
+	} else {
+
+		nPaths[2] = 1 // only 0-2 if 1 not present
+	}
+
+	for i := 3; i < max; i++ {
+		if !hash[i] {
+			continue
+		}
+
+		nPaths[i] = nPaths[i-3] + nPaths[i-2] + nPaths[i-1]
+	}
+
+	fmt.Println(nPaths[max-3])
+
 }
 
 func readInput(path string) ([]int, error) {
