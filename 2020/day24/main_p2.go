@@ -59,10 +59,14 @@ func main() {
 		tmp := make(grid)
 		for pos, v := range board {
 			tmp[pos] = v
-			neighbors := getNeighbors(pos)
-			for _, p := range neighbors {
-				b := board[p]
-				tmp[p] = b
+			// we only need to worry about neighbors for black tiles
+			if v {
+				neighbors := getNeighbors(pos)
+				for _, p := range neighbors {
+					b := board[p]
+					tmp[p] = b
+
+				}
 			}
 
 		}
