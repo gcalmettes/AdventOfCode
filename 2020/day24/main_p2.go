@@ -55,26 +55,33 @@ func main() {
 	for day < 100 {
 		day++
 
-		minX, maxX, minY, maxY := board.getBounds()
+		// make grid with current tiles and neighbors
 		tmp := make(grid)
-		for j := minY - 1; j <= maxY+1; j++ {
-			for i := minX - 1; i <= maxX+1; i++ {
-				pos := fmt.Sprintf("(%d)-(%d)", i, j)
-				neighbors := getNeighbors(pos)
-				c := 0
-				for _, p := range neighbors {
-					if board[p] {
-						c++
-					}
+		for pos, v := range board {
+			tmp[pos] = v
+			neighbors := getNeighbors(pos)
+			for _, p := range neighbors {
+				b := board[p]
+				tmp[p] = b
+			}
+
+		}
+		// flip needed tiles
+		for pos := range tmp {
+			neighbors := getNeighbors(pos)
+			c := 0
+			for _, p := range neighbors {
+				if board[p] {
+					c++
 				}
-				switch isBlack := board[pos]; {
-				case isBlack && (c == 0 || c > 2):
-					tmp[pos] = !isBlack
-				case !isBlack && c == 2:
-					tmp[pos] = !isBlack
-				default:
-					tmp[pos] = isBlack
-				}
+			}
+			switch isBlack := board[pos]; {
+			case isBlack && (c == 0 || c > 2):
+				tmp[pos] = !isBlack
+			case !isBlack && c == 2:
+				tmp[pos] = !isBlack
+			default:
+				tmp[pos] = isBlack
 			}
 
 		}
@@ -110,6 +117,7 @@ func (g grid) getBounds() (int, int, int, int) {
 
 func (g grid) String() string {
 	minX, maxX, minY, maxY := g.getBounds()
+	// minX, maxX, minY, maxY := -50, 50, -50, 50
 
 	var b strings.Builder
 	for y := minY; y <= maxY; y++ {
