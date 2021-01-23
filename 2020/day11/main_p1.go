@@ -60,12 +60,22 @@ func (g grid) String() string {
 			status := g.cells[xy{x, y}]
 			if status == "#" {
 				n++
+				fmt.Fprintf(&out, "\033[33m")
+				fmt.Fprintf(&out, status)
+				fmt.Fprintf(&out, "\033[0m")
+			} else {
+
+				fmt.Fprintf(&out, status)
 			}
-			fmt.Fprintf(&out, status)
+
 		}
 		fmt.Fprint(&out, "\n")
 	}
-	fmt.Fprintf(&out, "Occupied: %d\n", n)
+	// Red color
+	fmt.Fprintf(&out, "\033[31m")
+	fmt.Fprintf(&out, "Occupied: \033[30m\033[47m%d\033[49m\n\n", n)
+	// Reset
+	fmt.Fprintf(&out, "\033[0m")
 	return out.String()
 
 }
