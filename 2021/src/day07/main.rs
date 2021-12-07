@@ -12,25 +12,27 @@ fn parse_input(content: &str) -> Vec<i32> {
        crabs
 }
 
-fn part1(input: &str) -> usize {
+fn part1(input: &str) -> i32 {
 
     let crabs = parse_input(input);
 
     let min = *crabs.iter().min().unwrap();
     let max = *crabs.iter().max().unwrap();
 
-    let minfuel: Option<i32> = (min..=max)
+    let minfuel: i32 = (min..=max)
         .map(|x| crabs.iter().map(|c| (c-x).abs()).sum())
-        .min();
+        .min()
+        .unwrap_or(-1);
 
-    match minfuel {
-        Some(min) => return (min as i32).try_into().unwrap(),
-        None      => return (-1 as i32).try_into().unwrap(),
-    }
+    // If no unwrap_or
+    // match minfuel {
+    //     Some(min) => return (min as i32).try_into().unwrap(),
+    //     None      => return (-1 as i32).try_into().unwrap(),
+    // }
+    minfuel
 }
 
-
-// move cost
+// move => cost
 // +1 =>  1 = 1 * (1+1) / 2
 // +2 =>  3 = 2 * (2+1) / 2
 // +3 =>  6 = 3 * (3+1) / 2
@@ -40,21 +42,18 @@ fn cost(n: i32) -> i32 {
   n * (n + 1) / 2
 }
 
-fn part2(input: &str) -> usize {
+fn part2(input: &str) -> i32 {
 
     let crabs = parse_input(input);
 
     let min = *crabs.iter().min().unwrap();
     let max = *crabs.iter().max().unwrap();
 
-    let minfuel: Option<i32> = (min..=max)
+    let minfuel: i32 = (min..=max)
         .map(|x| crabs.iter().map(|c| cost((c-x).abs())).sum())
-        .min();
-
-    match minfuel {
-        Some(min) => return (min as i32).try_into().unwrap(),
-        None      => return (-1 as i32).try_into().unwrap(),
-    }
+        .min()
+        .unwrap_or(-1);
+    minfuel
 }
 
 
