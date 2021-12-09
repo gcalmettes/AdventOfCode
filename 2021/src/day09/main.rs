@@ -89,7 +89,6 @@ fn part2(input: &str) -> usize {
             let neighbors = get_neighbors(**coord);
             neighbors.iter()
                 .filter_map(|c| seamap.get(c))
-                // .collect::<Vec<_>>();
                 .all(|c| c > val)
                 })
         .map(|(coords, _)| coords)
