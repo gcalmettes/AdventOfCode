@@ -3,6 +3,7 @@ use std::fs;
 use std::collections::{HashMap, HashSet};
 use ansi_term::Colour;
 use ansi_term::{ANSIString, ANSIStrings};
+use std::{thread, time};
 
 fn parse_input(content: &str) -> HashMap<(usize, usize), usize> {
 
@@ -29,9 +30,11 @@ fn show(m: &HashMap<(usize, usize), usize>, highlight: usize) {
             match m.get(&(x, y)) {
                 Some(i) => {
                     if *i == highlight {
-                        lines.push(Colour::Red.paint(i.to_string()))
+                        lines.push(Colour::Red.paint("#"))
+                        // lines.push(Colour::Red.paint(i.to_string()))
                     } else {
-                        lines.push(Colour::White.paint(i.to_string()))
+                        // lines.push(Colour::White.paint(i.to_string()))
+                        lines.push(Colour::White.paint("."))
                     }
                 },
                 _ => ()
@@ -39,7 +42,11 @@ fn show(m: &HashMap<(usize, usize), usize>, highlight: usize) {
         }
         lines.push(Colour::White.paint("\n"))
     }
+    print!("\x1B[2J\x1B[1;1H");
     println!("{}", ANSIStrings(&lines));
+
+    let duration = time::Duration::from_millis(120);
+    thread::sleep(duration);
 }
 
 fn get_neighbors(coords: (usize, usize)) -> Vec<(usize, usize)> {
@@ -106,10 +113,9 @@ fn cascade_flashes(m: &mut HashMap<(usize, usize), usize>, flashed: &mut HashSet
     if to_flash.len() > 0 {
         cascade_flashes(m, flashed, to_flash);
     }
-
 }
 
-fn run_step(m: &mut HashMap<(usize, usize), usize>) -> usize {
+fn run_step(m: &mut HashMap<(usize, usize), usize>, animate: bool) -> usize {
     
     const LEN_X: usize = 10;
     const LEN_Y: usize = 10;
@@ -132,7 +138,6 @@ fn run_step(m: &mut HashMap<(usize, usize), usize>) -> usize {
         .filter(|(_, v)| **v > 9)
         .for_each(|(c, _)| {new_flashing.insert(*c);});
     
-    // println!(">> {:?}", flashing);
     let mut flashed = HashSet::new();
     cascade_flashes(m, &mut flashed, new_flashing);
 
@@ -151,17 +156,21 @@ fn run_step(m: &mut HashMap<(usize, usize), usize>) -> usize {
             }
         }
     }
+
+    if animate {
+        show(m, 0)
+    }
     n_flash
 }
 
-fn part1(input: &str) -> usize {
+fn part1(input: &str, animate: bool) -> usize {
     let mut octopuses = parse_input(input);
     
     const N_STEP: usize = 100;
 
     let mut count:usize = 0;
     for _step  in 0..N_STEP {
-        count += run_step(&mut octopuses);
+        count += run_step(&mut octopuses, animate);
     }
     count
 }
@@ -172,10 +181,9 @@ fn part2(input: &str) -> usize {
     let mut step: usize = 0;
     let mut stop = false;
     while !stop {
-        let count = run_step(&mut octopuses);
+        let count = run_step(&mut octopuses, false);
         stop = count == 100;
         step += 1;
-        // show(&octopuses, 0);
     }
     step
 }
@@ -184,7 +192,8 @@ fn main() {
     let path = Path::new("./inputs/day11.txt");
     let input = fs::read_to_string(path).expect("Unable to read file");
 
-    let p1 = part1(&input);
+    let animate = false;
+    let p1 = part1(&input, animate);
     println!("{}", p1);
     let p2 = part2(&input);
     println!("{}", p2);
