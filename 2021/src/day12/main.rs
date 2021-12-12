@@ -9,10 +9,7 @@ fn parse_input(content: &str) -> HashMap<&str, Vec<&str>> {
         .for_each(|entry| {
             let parts = entry.split("-").collect::<Vec<_>>();
             data.entry(parts[0]).or_insert(Vec::new()).push(parts[1]);
-            // do not add the reverse relationship if we are at start or end
-            if parts[0] != "start" && parts[1] != "end" {
-                data.entry(parts[1]).or_insert(Vec::new()).push(parts[0]);
-            }
+            data.entry(parts[1]).or_insert(Vec::new()).push(parts[0]);
         });
        data
 }
@@ -51,7 +48,7 @@ fn part1(input: &str) -> usize {
 fn count_paths_2(caves: &HashMap<&str, Vec<&str>>, cave: &str, seen: &HashSet<String>, cannot_revisit_small: bool) -> usize {
     if cave == "end" {
         return 1
-    } else if cave == "start" && seen.len() > 0 { // we can only go to start once
+    } else if cave == "start" && seen.contains(cave) { // we can only go to start once
         return 0
     } else if is_small(cave) && seen.contains(cave) && cannot_revisit_small {
         return 0
