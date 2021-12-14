@@ -30,9 +30,9 @@ impl Paper {
         for y in 0..maxs[1]+1 {
             for x in 0..maxs[0]+1 {
                 if self.dots.keys().cloned().collect::<Vec<_>>().contains(&(x, y)) {
-                    print!("#")
+                    print!("##")
                 } else {
-                    print!(".")
+                    print!("  ")
                 }
             }
             print!("\n")
