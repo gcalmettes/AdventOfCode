@@ -60,14 +60,13 @@ fn part(input: &str, n: usize) -> usize {
         .for_each(|(k, v)| {
             k.chars().for_each(|c| *counts.entry(c).or_insert(0) += v)
         });
+
     let first = 'C';
     let last = 'O';
-    *counts.entry(first).or_insert(0) -= 1;
-    *counts.entry(last).or_insert(0) -= 1;
-    counts.iter_mut()
-        .for_each(|(_, v)| *v /= 2);
     *counts.entry(first).or_insert(0) += 1;
     *counts.entry(last).or_insert(0) += 1;
+    counts.iter_mut()
+        .for_each(|(_, v)| *v /= 2);
 
     let min = counts.values().min().unwrap();
     let max = counts.values().max().unwrap();
