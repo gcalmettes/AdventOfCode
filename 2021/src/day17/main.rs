@@ -29,7 +29,6 @@ fn simulate_probe_launch(mut vx: i32, mut vy: i32) -> (Option<i32>, (i32, i32)) 
                     return (None, (vx, vy))
                 }
             },
-            _ => {} // else we continue looping
         }
     }
 }
