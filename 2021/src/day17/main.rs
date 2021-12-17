@@ -34,7 +34,7 @@ fn simulate_probe_launch(mut vx: i32, mut vy: i32) -> (Option<i32>, (i32, i32)) 
     }
 }
 
-fn part1() -> i32 {
+fn parts() -> (i32, usize) {
     let mut maxs: Vec<i32> = Vec::new();
     for x in 0..=UPPERXBOUND {
         for y in LOWERYBOUND..1000 {
@@ -44,27 +44,11 @@ fn part1() -> i32 {
             }
         }
     }
-    *maxs.iter().max().unwrap()
-}
-
-fn part2() -> usize {
-    let mut maxs: Vec<i32> = Vec::new();
-    // let mut velocity: Vec<i32> = Vec::new();
-    for x in 0..=UPPERXBOUND {
-        for y in LOWERYBOUND..2000 {
-            match simulate_probe_launch(x, y) {
-                (Some(m), _) => maxs.push(m),
-                _ => {},
-            }
-        }
-    }
-    maxs.iter()
-        .count()
+    (*maxs.iter().max().unwrap(), maxs.iter().count())
 }
 
 fn main() {
-    let p1 = part1();
+    let (p1, p2) = parts();
     println!("{}", p1);
-    let p2 = part2();
     println!("{}", p2);
 }
