@@ -20,14 +20,12 @@ fn play_quantum(cache: &mut HashMap<(usize,usize,usize,usize,usize),(usize,usize
     }
 
     let mut wins = (0, 0);
-        // https://docs.rs/itertools/0.5.2/itertools/macro.iproduct.html
         for (a, b, c) in iproduct!(1..=3, 1..=3, 1..=3) {
             let roll = a+b+c;
             let mut spots_and_scores = starting_spots_and_scores.clone();
             spots_and_scores[player] += roll;
             spots_and_scores[player] = ((spots_and_scores[player] - 1) % 10) + 1;
             spots_and_scores[player + 2] += spots_and_scores[player];
-            // println!("{:?}, {} {}", spots_and_scores, next_player, (next_player + 1) % 2);
             let (win1, win2) = play_quantum(cache, spots_and_scores.clone(), (player + 1) % 2 );
             wins.0 += win1;
             wins.1 += win2;
