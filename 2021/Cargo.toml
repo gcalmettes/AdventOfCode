@@ -79,6 +79,10 @@ path = "src/day18/main.rs"
 name = "day20"
 path = "src/day20/main.rs"
 
+[[bin]]
+name = "day21"
+path = "src/day21/main.rs"
+
 [dependencies]
 ansi_term = "0.12"
 fast_paths = "0.2.0"
