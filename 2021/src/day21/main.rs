@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use itertools::iproduct;
 
 fn regular_roll(start: usize) -> usize {
+    // using the difference of sums of natural numbers, because why not :)
     let end = start + 3;
     (end * (end + 1) / 2) - (start * (start + 1) / 2)
 }
