@@ -83,8 +83,12 @@ path = "src/day20/main.rs"
 name = "day21"
 path = "src/day21/main.rs"
 
+[[bin]]
+name = "day22"
+path = "src/day22/main.rs"
+
 [dependencies]
 ansi_term = "0.12"
-fast_paths = "0.2.0"
 pathfinding = "3.0.5"
 itertools = "0.10.3"
+regex = "1.5"
