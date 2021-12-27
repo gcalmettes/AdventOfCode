@@ -10,7 +10,7 @@ use std::collections::{HashMap, HashSet};
 // Algorithm steps:
 // 1- compute all distances of each beacon with the other beacons into a scanner's view
 // 2- initialize grid, using the first scanner as referentiel
-// 3- select scanner having the most common beacons with grid by comparing distances (see 1)
+// 3- select scanner having the most common beacons with grid by comparing inter-beacons-distances (see 1)
 // 4- compute center of gravity point for grid and beacons'scanner, and offset both to their COG
 // 5- uses offseted points to calculate rotation, rotate all points, and get translation
 // 6- cache translation for part 2 (As they also represent scanner position)
@@ -28,20 +28,12 @@ struct Scanner {
 
 impl Scanner {
 
-    fn count_matching_distances(&self, grid_pattern: &HashMap<Beacon, HashSet<usize>>) -> usize {
-        iproduct!(grid_pattern, self.beacons_distance_to_others().iter())
-            .map(|((_, gv), (_, bv))| gv.intersection(bv).count())
-            .max()
-            .unwrap()
-    }
-
     fn beacons_distance_to_others(&self) -> HashMap<Beacon, HashSet<usize>> {
         compute_beacons_distance_to_others(&HashSet::from_iter(self.beacons.clone()))
     }
 
-    fn get_scanner_grid_correspondance_map(&self, grid: &HashSet<Beacon>) -> HashMap<Beacon, Beacon> {
+    fn get_scanner_grid_correspondance_map(&self, grid_beacons_inter_distances: &HashMap<Beacon, HashSet<usize>>) -> HashMap<Beacon, Beacon> {
         let scanner_beacons_inter_distances = self.beacons_distance_to_others();
-        let grid_beacons_inter_distances = compute_beacons_distance_to_others(grid);
 
         // we filter by beacon having at least 11 similar distances
         // (group of 12 beacons = 11 neighbors each)
@@ -69,15 +61,13 @@ fn distance_between(b1: &Beacon, b2: &Beacon) -> usize {
     (((b1.0 - b2.0).pow(2) + (b1.1 - b2.1).pow(2) + (b1.2 - b2.2).pow(2)) as f64).sqrt() as usize
 }
 
-// fn get_best_candidate_scanner_idx(scanners: &Vec<Scanner>, grid: &HashSet<Beacon>) -> (usize, usize) {
-fn get_best_candidate_scanner_idx(scanners: &Vec<Scanner>, grid_distances: &HashMap<Beacon, HashSet<usize>>) -> (usize, usize) {
+fn get_best_candidate_scanner_idx_and_mapping(scanners: &Vec<Scanner>, grid_distances: &HashMap<Beacon, HashSet<usize>>) -> (usize, HashMap<Beacon, Beacon>) {
         scanners.iter()
-            .map(|s| s.count_matching_distances(&grid_distances))
+            .map(|s| s.get_scanner_grid_correspondance_map(grid_distances))
             .enumerate()
-            .max_by(|b1, b2| b1.1.cmp(&b2.1))
+            .max_by(|b1, b2| b1.1.len().cmp(&b2.1.len()))
             .unwrap()
 }
-
 
 fn compute_translation_and_rotation(mapping: &HashMap<Beacon, Beacon>) -> (Vec<isize>, HashMap<usize, (usize, isize)>) {
 
@@ -91,7 +81,6 @@ fn compute_translation_and_rotation(mapping: &HashMap<Beacon, Beacon>) -> (Vec<i
         .iter()
         .map(|v| (*v as f32) / n)
         .collect();
-
 
     // center of gravity for sensor
     let sensor_cog: Vec<f32> = mapping.keys()
@@ -170,18 +159,16 @@ fn part1(input: &str) -> (usize, Vec<Vec<isize>>) {
     let mut positions: Vec<Vec<isize>> = Vec::new();
 
     while scanners.len() > 0 {
-        // get scanner with most interdistances in common
+        // get scanner with most beacons in common
         let grid_distances = compute_beacons_distance_to_others(&grid);
-        let (idx, _count) = get_best_candidate_scanner_idx(&scanners, &grid_distances);
-
-        let sc = &scanners[idx];
-        let beacon_mapping = sc.get_scanner_grid_correspondance_map(&grid);
+        let (idx, beacon_mapping) = get_best_candidate_scanner_idx_and_mapping(&scanners, &grid_distances);
+        let selected_scanner = &scanners[idx];
 
         // compute transformation (translation + rotation) of the scanner referentiel into grid referentiel
         let (translation, rotation) = compute_translation_and_rotation(&beacon_mapping);
 
         // beacons coordinates in grid referentiel
-        let transformed_beacons = apply_transformation(&translation, &rotation, &sc.beacons);
+        let transformed_beacons = apply_transformation(&translation, &rotation, &selected_scanner.beacons);
 
         grid.extend(transformed_beacons);
         scanners.remove(idx);
