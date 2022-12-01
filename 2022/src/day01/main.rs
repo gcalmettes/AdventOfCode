@@ -2,16 +2,17 @@ use itertools::Itertools;
 use std::fs;
 
 fn get_sorted_elves() -> Vec<usize> {
-    let input = fs::read_to_string("./inputs/01.in")
-        .expect("file not found");
+    let input = fs::read_to_string("./inputs/01.in").expect("file not found");
 
-    input.split("\n\n")
+    input
+        .split("\n\n")
         .collect::<Vec<&str>>()
         .iter()
-        .map(|elf| elf.lines()
-            .map(|l| l.parse::<usize>().unwrap())
-            .sum::<usize>()
-        )
+        .map(|elf| {
+            elf.lines()
+                .map(|l| l.parse::<usize>().unwrap())
+                .sum::<usize>()
+        })
         .sorted()
         .rev()
         .collect::<Vec<usize>>()
