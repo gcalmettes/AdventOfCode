@@ -1,60 +1,67 @@
 use std::fs;
 
+#[derive(Debug, PartialEq, Copy, Clone)]
+enum RPS {
+    ROCK = 1,
+    PAPER = 2,
+    SCISSORS = 3,
+}
+
+impl RPS {
+    fn value(&self) -> isize {
+        match self {
+            RPS::ROCK => 1,
+            RPS::PAPER => 2,
+            RPS::SCISSORS => 3,
+        }
+    }
+}
+
 #[derive(Debug)]
-struct Round(char, char);
+struct Round(RPS, RPS);
 
 impl Round {
     fn is_draw(&self) -> bool {
         self.0 == self.1
     }
     fn is_win(&self) -> bool {
-        match (self.0, self.1) {
-            ('S', 'R') | ('P', 'S') | ('R', 'P') => true,
+        match self.1.value() - (self.0.value() % 3) {
+            1 => true,
             _ => false,
         }
     }
-    fn score(&self) -> u32 {
-        let shape_points = get_shape_points(self.1);
+    fn score(&self) -> isize {
         let outcome_points = match (self.is_draw(), self.is_win()) {
             (false, true) => 6, // win
             (true, false) => 3, // draw
             _ => 0,             // loss
         };
-        shape_points + outcome_points
+        self.1.value() + outcome_points
     }
 }
 
-fn get_sign(c: char) -> char {
+fn get_sign(c: char) -> RPS {
     match c {
-        'A' | 'X' => 'R', // rock
-        'B' | 'Y' => 'P', // paper
-        'C' | 'Z' => 'S', // siscor
-        _ => '.',
+        'A' | 'X' => RPS::ROCK,
+        'B' | 'Y' => RPS::PAPER,
+        'C' | 'Z' => RPS::SCISSORS,
+        _ => unreachable!(),
     }
 }
 
-fn get_shape_points(play: char) -> u32 {
-    match play {
-        'R' => 1,
-        'P' => 2,
-        'S' => 3,
-        _ => 0,
+fn get_needed_shape_for_outcome(opponent: RPS, outcome: char) -> RPS {
+    match (opponent, outcome) {
+        (RPS::ROCK, 'Z') => RPS::PAPER,
+        (RPS::ROCK, 'X') => RPS::SCISSORS,
+        (RPS::PAPER, 'Z') => RPS::SCISSORS,
+        (RPS::PAPER, 'X') => RPS::ROCK,
+        (RPS::SCISSORS, 'Z') => RPS::ROCK,
+        (RPS::SCISSORS, 'X') => RPS::PAPER,
+        _ => opponent, // all draws
     }
 }
 
-fn get_needed_shape_for_outcome(oponent: char, outcome: char) -> char {
-    match (oponent, outcome) {
-        ('R', 'Z') => 'P',
-        ('R', 'X') => 'S',
-        ('P', 'Z') => 'S',
-        ('P', 'X') => 'R',
-        ('S', 'Z') => 'R',
-        ('S', 'X') => 'P',
-        _ => oponent, // all draws
-    }
-}
-
-fn part1() -> u32 {
+fn part1() -> isize {
     let input = fs::read_to_string("./inputs/02.in").expect("file not found");
 
     let score = input
@@ -68,7 +75,7 @@ fn part1() -> u32 {
     score
 }
 
-fn part2() -> u32 {
+fn part2() -> isize {
     let input = fs::read_to_string("./inputs/02.in").expect("file not found");
 
     let score = input
