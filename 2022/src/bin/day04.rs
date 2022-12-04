@@ -4,19 +4,13 @@ use std::fs;
 fn parse_input() -> Vec<Vec<usize>> {
     let input = fs::read_to_string("./inputs/04.in").expect("file not found");
     let re = Regex::new(r"(\d+)-(\d+),(\d+)-(\d+)").unwrap();
-    let pairs = input
-        .lines()
-        .map(|line| {
-            re.captures_iter(&line)
-                .flat_map(|c| {
-                    c.iter()
-                        .filter_map(|m| m.unwrap().as_str().parse::<usize>().ok())
-                        .collect::<Vec<usize>>()
-                })
+    re.captures_iter(&input)
+        .map(|c| {
+            c.iter()
+                .filter_map(|m| m.unwrap().as_str().parse::<usize>().ok())
                 .collect::<Vec<usize>>()
         })
-        .collect::<Vec<Vec<usize>>>();
-    pairs
+        .collect::<Vec<Vec<usize>>>()
 }
 
 fn overlap(p: Vec<usize>) -> usize {
