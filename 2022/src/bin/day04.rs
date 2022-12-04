@@ -21,27 +21,26 @@ fn parse_input() -> Vec<Vec<usize>> {
 
 fn overlap(p: Vec<usize>) -> usize {
     match (
-        p[0] <= p[2],
-        p[2] <= p[1],
-        p[0] <= p[3],
-        p[3] <= p[1],
-        p[2] <= p[0],
-        p[0] <= p[3],
-        p[2] <= p[1],
-        p[1] <= p[3],
+        p[0] <= p[2] && p[2] <= p[1],
+        p[0] <= p[3] && p[3] <= p[1],
+        p[2] <= p[0] && p[0] <= p[3],
+        p[2] <= p[1] && p[1] <= p[3],
     ) {
-        (true, true, ..) => 1,
-        (_, _, true, true, ..) => 1,
-        (_, _, _, _, true, true, ..) => 1,
-        (.., true, true) => 1,
+        (true, ..) => 1,
+        (_, true, ..) => 1,
+        (_, _, true, ..) => 1,
+        (.., true) => 1,
         _ => 0,
     }
 }
 
 fn overlap_full(p: Vec<usize>) -> usize {
-    match (p[0] <= p[2], p[1] >= p[3], p[2] <= p[0], p[3] >= p[1]) {
-        (true, true, _, _) => 1,
-        (_, _, true, true) => 1,
+    match (
+        p[0] <= p[2] && p[1] >= p[3],
+        p[2] <= p[0] && p[3] >= p[1]
+    ) {
+        (true, _) => 1,
+        (_, true) => 1,
         _ => 0,
     }
 }
