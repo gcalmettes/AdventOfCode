@@ -1,9 +1,6 @@
 use itertools::Itertools;
-use std::fs;
 
-fn get_sorted_elves() -> Vec<usize> {
-    let input = fs::read_to_string("./inputs/01.in").expect("file not found");
-
+fn get_sorted_elves(input: &str) -> Vec<usize> {
     input
         .split("\n\n")
         .collect::<Vec<&str>>()
@@ -18,10 +15,10 @@ fn get_sorted_elves() -> Vec<usize> {
         .collect::<Vec<usize>>()
 }
 
-fn main() {
-    let elves = get_sorted_elves();
+#[aoc::main(01)]
+fn main(input: &str) -> (usize, usize) {
+    let elves = get_sorted_elves(input);
     let p1 = elves[0];
-    let p2 = &elves[0..3].iter().sum::<usize>();
-    println!("part 1: {:?}", p1);
-    println!("part 2: {:?}", p2);
+    let p2 = elves[0..3].iter().sum::<usize>();
+    (p1, p2)
 }

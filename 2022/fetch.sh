@@ -31,5 +31,5 @@ mkdir -p "$SCRIPT_DIR/inputs"
 
 curl -s "https://adventofcode.com/2022/day/$(($1 + 0))/input" \
     --cookie "session=$AOC_SESSION" \
-    -H 'User-Agent: Bash script at github.com/gcalmettes/AdventOfCode/blob/master/2022' \
+    -A "Bash script at $(git remote -v | head -n1 | awk '{print $2}')" \
     | tee "$SCRIPT_DIR/inputs/$1.in"
