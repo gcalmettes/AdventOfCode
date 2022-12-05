@@ -61,7 +61,7 @@ fn part2(input: &str, alphabet: &str) -> usize {
         .sum::<usize>()
 }
 
-#[aoc::main(03)]
+#[aoc::main()]
 fn main(input: &str) -> (usize, usize) {
     let alphabet = get_alphabet();
     let p1 = part1(input, &alphabet);

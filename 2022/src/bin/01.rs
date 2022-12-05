@@ -15,7 +15,7 @@ fn get_sorted_elves(input: &str) -> Vec<usize> {
         .collect::<Vec<usize>>()
 }
 
-#[aoc::main(01)]
+#[aoc::main()]
 fn main(input: &str) -> (usize, usize) {
     let elves = get_sorted_elves(input);
     let p1 = elves[0];

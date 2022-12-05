@@ -42,7 +42,7 @@ fn part2(pairs: Vec<Vec<usize>>) -> usize {
     pairs.iter().map(|p| overlap(p.to_vec())).sum()
 }
 
-#[aoc::main(04)]
+#[aoc::main()]
 fn main(input: &str) -> (usize, usize) {
     let pairs = parse_input(input);
     let p1 = part1(pairs.to_owned());

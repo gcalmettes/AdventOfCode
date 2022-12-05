@@ -1,19 +1,18 @@
 use proc_macro::TokenStream;
 use quote::quote;
+use std::env;
 use syn::{parse_macro_input, AttributeArgs, Ident, ItemFn, Lit, NestedMeta};
 
 #[proc_macro_attribute]
 pub fn main(args: TokenStream, input: TokenStream) -> TokenStream {
+    let file_name = env::args().nth(2).unwrap();
     let input_path = match &parse_macro_input!(args as AttributeArgs)[..] {
-        // only day provided
-        [NestedMeta::Lit(Lit::Int(day))] => format!("../../inputs/{}.in", day.token().to_string()),
-        // day and suffix of sample input provided
-        [NestedMeta::Lit(Lit::Int(day)), NestedMeta::Lit(Lit::Str(suffix))] => format!(
+        [NestedMeta::Lit(Lit::Str(suffix))] => format!(
             "../../inputs/{}-{}.in",
-            day.token().to_string(),
+            file_name,
             suffix.token().to_string().replace("\"", "")
         ),
-        _ => panic!("Expected one integer argument"),
+        _ => format!("../../inputs/{}.in", file_name),
     };
 
     let mut aoc_solution = parse_macro_input!(input as ItemFn);

@@ -70,7 +70,7 @@ fn part2(mut stacks: Vec<Vec<char>>, steps: &Vec<Vec<usize>>) -> String {
     stacks.iter().map(|c| c[c.len() - 1]).collect::<String>()
 }
 
-#[aoc::main(05)]
+#[aoc::main()]
 fn main(input: &str) -> (String, String) {
     let (stacks, steps) = parse_input(input);
     let p1 = part1(stacks.clone(), &steps);

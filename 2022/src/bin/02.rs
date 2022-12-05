@@ -86,7 +86,7 @@ fn part2(input: &str) -> isize {
     score
 }
 
-#[aoc::main(02)]
+#[aoc::main()]
 fn main(input: &str) -> (isize, isize) {
     let p1 = part1(input);
     let p2 = part2(input);
