@@ -41,8 +41,7 @@ fn parse_input(input: &str) -> (Vec<Vec<char>>, Vec<Vec<usize>>) {
     (stacks, steps)
 }
 
-fn part1(input: &str) -> String {
-    let (mut stacks, steps) = parse_input(input);
+fn part1(mut stacks: Vec<Vec<char>>, steps: &Vec<Vec<usize>>) -> String {
     for s in steps.iter() {
         let n = s[0];
         let from = s[1];
@@ -55,8 +54,7 @@ fn part1(input: &str) -> String {
     stacks.iter().map(|c| c[c.len() - 1]).collect::<String>()
 }
 
-fn part2(input: &str) -> String {
-    let (mut stacks, steps) = parse_input(input);
+fn part2(mut stacks: Vec<Vec<char>>, steps: &Vec<Vec<usize>>) -> String {
     for s in steps.iter() {
         let n = s[0];
         let from = s[1];
@@ -74,7 +72,8 @@ fn part2(input: &str) -> String {
 
 #[aoc::main(05)]
 fn main(input: &str) -> (String, String) {
-    let p1 = part1(input);
-    let p2 = part2(input);
+    let (stacks, steps) = parse_input(input);
+    let p1 = part1(stacks.clone(), &steps);
+    let p2 = part2(stacks, &steps);
     (p1, p2)
 }
