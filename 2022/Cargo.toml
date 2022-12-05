@@ -2,8 +2,18 @@
 name = "aoc"
 version = "0.1.0"
 edition = "2021"
+default-run = "aoc"
 
+[lib]
+proc-macro = true
 
 [dependencies]
 itertools = "0.10"
-regex = "1"
+
+# main.rs dependencies
+regex = "1.7"
+once_cell = "1.9"
+
+# lib proc-macro dependencies
+syn = { version = "1.0", features = ["full"] }
+quote = "1.0"

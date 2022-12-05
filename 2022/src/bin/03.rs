@@ -1,6 +1,5 @@
 use itertools::Itertools;
 use std::collections::HashSet;
-use std::fs;
 use std::str::FromStr;
 
 #[derive(Debug)]
@@ -35,11 +34,7 @@ fn get_alphabet() -> String {
     alphabet
 }
 
-fn part1() -> usize {
-    let input = fs::read_to_string("./inputs/03.in").expect("file not found");
-
-    let alphabet = get_alphabet();
-
+fn part1(input: &str, alphabet: &str) -> usize {
     input
         .lines()
         .map(|l| Ruscksack::from_str(l).unwrap())
@@ -48,11 +43,7 @@ fn part1() -> usize {
         .sum()
 }
 
-fn part2() -> usize {
-    let input = fs::read_to_string("./inputs/03.in").expect("file not found");
-
-    let alphabet = get_alphabet();
-
+fn part2(input: &str, alphabet: &str) -> usize {
     input
         .lines()
         .chunks(3)
@@ -70,9 +61,10 @@ fn part2() -> usize {
         .sum::<usize>()
 }
 
-fn main() {
-    let p1 = part1();
-    let p2 = part2();
-    println!("part 1: {:?}", p1);
-    println!("part 2: {:?}", p2);
+#[aoc::main(03)]
+fn main(input: &str) -> (usize, usize) {
+    let alphabet = get_alphabet();
+    let p1 = part1(input, &alphabet);
+    let p2 = part2(input, &alphabet);
+    (p1, p2)
 }

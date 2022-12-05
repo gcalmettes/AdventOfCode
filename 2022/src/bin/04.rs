@@ -1,8 +1,6 @@
 use regex::Regex;
-use std::fs;
 
-fn parse_input() -> Vec<Vec<usize>> {
-    let input = fs::read_to_string("./inputs/04.in").expect("file not found");
+fn parse_input(input: &str) -> Vec<Vec<usize>> {
     let re = Regex::new(r"(\d+)-(\d+),(\d+)-(\d+)").unwrap();
     re.captures_iter(&input)
         .map(|c| {
@@ -36,19 +34,18 @@ fn overlap_full(p: Vec<usize>) -> usize {
     }
 }
 
-fn part1() -> usize {
-    let pairs = parse_input();
+fn part1(pairs: Vec<Vec<usize>>) -> usize {
     pairs.iter().map(|p| overlap_full(p.to_vec())).sum()
 }
 
-fn part2() -> usize {
-    let pairs = parse_input();
+fn part2(pairs: Vec<Vec<usize>>) -> usize {
     pairs.iter().map(|p| overlap(p.to_vec())).sum()
 }
 
-fn main() {
-    let p1 = part1();
-    let p2 = part2();
-    println!("part 1: {:?}", p1);
-    println!("part 2: {:?}", p2);
+#[aoc::main(04)]
+fn main(input: &str) -> (usize, usize) {
+    let pairs = parse_input(input);
+    let p1 = part1(pairs.to_owned());
+    let p2 = part2(pairs).to_owned();
+    (p1, p2)
 }

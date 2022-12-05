@@ -1,5 +1,3 @@
-use std::fs;
-
 #[derive(Debug, PartialEq, Copy, Clone)]
 enum RPS {
     ROCK = 1,
@@ -61,9 +59,7 @@ fn get_needed_shape_for_outcome(opponent: RPS, outcome: char) -> RPS {
     }
 }
 
-fn part1() -> isize {
-    let input = fs::read_to_string("./inputs/02.in").expect("file not found");
-
+fn part1(input: &str) -> isize {
     let score = input
         .lines()
         .map(|round| {
@@ -75,9 +71,7 @@ fn part1() -> isize {
     score
 }
 
-fn part2() -> isize {
-    let input = fs::read_to_string("./inputs/02.in").expect("file not found");
-
+fn part2(input: &str) -> isize {
     let score = input
         .lines()
         .map(|round| {
@@ -92,9 +86,9 @@ fn part2() -> isize {
     score
 }
 
-fn main() {
-    let p1 = part1();
-    let p2 = part2();
-    println!("part 1: {:?}", p1);
-    println!("part 2: {:?}", p2);
+#[aoc::main(02)]
+fn main(input: &str) -> (isize, isize) {
+    let p1 = part1(input);
+    let p2 = part2(input);
+    (p1, p2)
 }

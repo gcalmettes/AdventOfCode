@@ -1,8 +1,6 @@
 use regex::Regex;
-use std::fs;
 
-fn parse_input() -> (Vec<Vec<char>>, Vec<Vec<usize>>) {
-    let input = fs::read_to_string("./inputs/05.in").expect("file not found");
+fn parse_input(input: &str) -> (Vec<Vec<char>>, Vec<Vec<usize>>) {
     // let's try the new "if let" syntax
     let (crates, ins) = if let Some((crates, ins)) = input.split_once("\n\n") {
         (crates, ins)
@@ -43,8 +41,8 @@ fn parse_input() -> (Vec<Vec<char>>, Vec<Vec<usize>>) {
     (stacks, steps)
 }
 
-fn part1() -> String {
-    let (mut stacks, steps) = parse_input();
+fn part1(input: &str) -> String {
+    let (mut stacks, steps) = parse_input(input);
     for s in steps.iter() {
         let n = s[0];
         let from = s[1];
@@ -57,8 +55,8 @@ fn part1() -> String {
     stacks.iter().map(|c| c[c.len() - 1]).collect::<String>()
 }
 
-fn part2() -> String {
-    let (mut stacks, steps) = parse_input();
+fn part2(input: &str) -> String {
+    let (mut stacks, steps) = parse_input(input);
     for s in steps.iter() {
         let n = s[0];
         let from = s[1];
@@ -74,9 +72,9 @@ fn part2() -> String {
     stacks.iter().map(|c| c[c.len() - 1]).collect::<String>()
 }
 
-fn main() {
-    let p1 = part1();
-    let p2 = part2();
-    println!("part 1: {:?}", p1);
-    println!("part 2: {:?}", p2);
+#[aoc::main(05)]
+fn main(input: &str) -> (String, String) {
+    let p1 = part1(input);
+    let p2 = part2(input);
+    (p1, p2)
 }
