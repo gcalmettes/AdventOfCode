@@ -29,10 +29,7 @@ fn overlap(p: Vec<usize>) -> usize {
 }
 
 fn overlap_full(p: Vec<usize>) -> usize {
-    match (
-        p[0] <= p[2] && p[1] >= p[3],
-        p[2] <= p[0] && p[3] >= p[1]
-    ) {
+    match (p[0] <= p[2] && p[1] >= p[3], p[2] <= p[0] && p[3] >= p[1]) {
         (true, _) => 1,
         (_, true) => 1,
         _ => 0,
