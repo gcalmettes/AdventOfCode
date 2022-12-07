@@ -73,29 +73,25 @@ fn compute_size(
     size
 }
 
-fn part1(filesystem: &HashMap<PathBuf, Vec<(&str, isize)>>) -> isize {
+fn part1(filesystem: &HashMap<PathBuf, Vec<(&str, isize)>>) -> (isize, HashMap<PathBuf, isize>) {
     let mut sizes: HashMap<PathBuf, isize> = HashMap::new();
-    filesystem
+    let res = filesystem
         .keys()
         .map(|name| compute_size(name.to_path_buf(), filesystem, &mut sizes))
         .filter(|s| *s < 100000)
-        .sum()
+        .sum();
+    (res, sizes)
 }
 
-fn part2(filesystem: &HashMap<PathBuf, Vec<(&str, isize)>>) -> isize {
-    let mut sizes: HashMap<PathBuf, isize> = HashMap::new();
-    let fs_sizes = filesystem
-        .keys()
-        .map(|name| compute_size(name.to_path_buf(), filesystem, &mut sizes))
-        .collect::<Vec<isize>>();
-
+fn part2(sizes: HashMap<PathBuf, isize>) -> isize {
     const TOTAL_CAPACITY: isize = 70_000_000;
     const MINIMUM_NEEDED_FOR_UPDATE: isize = 30_000_000;
     let currently_available = TOTAL_CAPACITY - sizes[&PathBuf::from_str("/").unwrap()];
     let needed_to_free = MINIMUM_NEEDED_FOR_UPDATE - currently_available;
-    fs_sizes
-        .into_iter()
-        .filter(|x| *x >= needed_to_free)
+
+    *sizes
+        .values()
+        .filter(|x| **x >= needed_to_free)
         .min()
         .unwrap()
 }
@@ -103,7 +99,7 @@ fn part2(filesystem: &HashMap<PathBuf, Vec<(&str, isize)>>) -> isize {
 #[aoc::main()]
 fn main(input: &str) -> (isize, isize) {
     let fs = parse_input(input);
-    let p1 = part1(&fs);
-    let p2 = part2(&fs);
+    let (p1, sizes) = part1(&fs);
+    let p2 = part2(sizes);
     (p1, p2)
 }
