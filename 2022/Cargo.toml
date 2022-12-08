@@ -9,6 +9,7 @@ proc-macro = true
 
 [dependencies]
 itertools = "0.10"
+hashbrown = "0.13"
 
 # main.rs dependencies
 regex = "1.7"
