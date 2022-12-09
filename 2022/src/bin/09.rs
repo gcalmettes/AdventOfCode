@@ -80,7 +80,6 @@ impl Rope {
     }
 
     fn step(&mut self, m: &Move, multi: bool) {
-        // println!("--- NEW MOVE -----");
         match m {
             Move::Right(v) => (0..*v).for_each(|_| {
                 self.head_pos.0 += 1;
