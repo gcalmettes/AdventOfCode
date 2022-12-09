@@ -21,7 +21,7 @@ impl Rope {
         (b.0 - a.0, b.1 - a.1)
     }
 
-    fn update_tail(&mut self, multi: bool) {
+    fn update_tail(&mut self) {
         self.tail_pos
             .clone()
             .iter()
@@ -67,35 +67,28 @@ impl Rope {
                     }
                     (_, _) => (),
                 }
-                match (multi, i) {
-                    (false, _) => {
-                        self.tail_visited.insert(self.tail_pos[0]);
-                    }
-                    (true, 8) => {
-                        self.tail_visited.insert(self.tail_pos[i]);
-                    }
-                    (_, _) => (),
-                }
             });
+        self.tail_visited
+            .insert(self.tail_pos[self.tail_pos.len() - 1]);
     }
 
-    fn step(&mut self, m: &Move, multi: bool) {
+    fn step(&mut self, m: &Move) {
         match m {
             Move::Right(v) => (0..*v).for_each(|_| {
                 self.head_pos.0 += 1;
-                self.update_tail(multi);
+                self.update_tail();
             }),
             Move::Left(v) => (0..*v).for_each(|_| {
                 self.head_pos.0 -= 1;
-                self.update_tail(multi);
+                self.update_tail();
             }),
             Move::Up(v) => (0..*v).for_each(|_| {
                 self.head_pos.1 += 1;
-                self.update_tail(multi);
+                self.update_tail();
             }),
             Move::Down(v) => (0..*v).for_each(|_| {
                 self.head_pos.1 -= 1;
-                self.update_tail(multi);
+                self.update_tail();
             }),
         };
     }
@@ -121,7 +114,7 @@ fn part1(data: &Vec<Move>) -> usize {
         tail_visited: HashSet::from([(0, 0)]),
     };
     data.iter().for_each(|m| {
-        rope.step(m, false);
+        rope.step(m);
     });
     rope.tail_visited.len()
 }
@@ -133,7 +126,7 @@ fn part2(data: &Vec<Move>) -> usize {
         tail_visited: HashSet::from([(0, 0)]),
     };
     data.iter().for_each(|m| {
-        rope.step(m, true);
+        rope.step(m);
     });
     rope.tail_visited.len()
 }
