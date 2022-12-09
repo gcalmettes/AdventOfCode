@@ -12,7 +12,7 @@ type Coord = (i32, i32);
 
 struct Rope {
     head_pos: Coord,
-    tail_pos: Vec<Coord>,
+    tail_pos: Box<[Coord]>,
     tail_visited: HashSet<Coord>,
 }
 
@@ -117,7 +117,7 @@ fn parse_input(input: &str) -> Vec<Move> {
 fn part1(data: &Vec<Move>) -> usize {
     let mut rope = Rope {
         head_pos: (0, 0),
-        tail_pos: vec![(0, 0)],
+        tail_pos: Box::new([(0, 0)]),
         tail_visited: HashSet::from([(0, 0)]),
     };
     data.iter().for_each(|m| {
@@ -129,17 +129,7 @@ fn part1(data: &Vec<Move>) -> usize {
 fn part2(data: &Vec<Move>) -> usize {
     let mut rope = Rope {
         head_pos: (0, 0),
-        tail_pos: vec![
-            (0, 0),
-            (0, 0),
-            (0, 0),
-            (0, 0),
-            (0, 0),
-            (0, 0),
-            (0, 0),
-            (0, 0),
-            (0, 0),
-        ],
+        tail_pos: Box::new([(0, 0); 9]),
         tail_visited: HashSet::from([(0, 0)]),
     };
     data.iter().for_each(|m| {
