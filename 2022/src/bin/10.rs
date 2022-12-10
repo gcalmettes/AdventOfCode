@@ -50,7 +50,8 @@ fn part2(data: &Vec<Ins>) -> String {
         Ins::AddX(v) => cycles.push((cycles[i].0 + 2, cycles[i].1 + v)),
     });
 
-    let mut screen: [[char; 40]; 6] = [[' '; 40]; 6];
+    // let mut screen: [[char; 40]; 6] = [[' '; 40]; 6];
+    let mut screen = String::new();
     (1..=240).for_each(|cycle| {
         let sprite_pos = cycles
             .iter()
@@ -62,22 +63,15 @@ fn part2(data: &Vec<Ins>) -> String {
 
         let cursor_pos = cycle - 1;
         let x = cursor_pos % 40;
-        let y = cursor_pos / 40;
-        if (sprite_pos - 1..=sprite_pos + 1).contains(&x) {
-            screen[y as usize][x as usize] = '█'
+        if x == 0 {
+            screen.push('\n')
+        }
+        match (sprite_pos - 1..=sprite_pos + 1).contains(&x) {
+            true => screen.push('█'),
+            false => screen.push(' '),
         }
     });
-
-    // we start by a newline for display formatting purpose
-    let mut display = "\n".to_owned();
-    display.push_str(
-        screen
-            .iter()
-            .map(|chars| String::from_iter(chars))
-            .join("\n")
-            .as_str(),
-    );
-    display
+    screen
 }
 
 #[aoc::main()]
