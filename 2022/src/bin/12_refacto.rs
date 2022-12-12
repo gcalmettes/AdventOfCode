@@ -44,37 +44,29 @@ fn part1(m: &Matrix<usize>, start: &Pos, goal: &Pos) -> usize {
     }
 }
 
-fn part2(m: &Matrix<usize>, goal: &Pos, p1: usize) -> usize {
-    m.indices()
-        .filter(|&p| m[p] == 1)
-        .map(|start| {
-            if let Some(path) = bfs(
-                &start,
-                |&p| {
-                    m.neighbours(p, false).into_iter().filter(move |n| {
-                        // neighbors as to be at most 1 step above,
-                        // but can lower without restriction
-                        (0..=(m[p] + 1)).contains(&m[*n])
-                    })
-                },
-                |&p| {
-                    //yolo
-                    p == *goal
-                },
-            ) {
-                path.len() - 1
-            } else {
-                p1
-            }
-        })
-        .min()
-        .unwrap()
+fn part2(m: &Matrix<usize>, goal: &Pos) -> usize {
+    // we start from the goal and stop as soon as we hit a 'a'
+    if let Some(path) = bfs(
+        goal,
+        |&p| {
+            m.neighbours(p, false).into_iter().filter(move |n| {
+                // neighbors as to be at most 1 step above,
+                // but can lower without restriction
+                ((m[p] - 1)..27).contains(&m[*n])
+            })
+        },
+        |&p| m[p] == 1,
+    ) {
+        path.len() - 1
+    } else {
+        0
+    }
 }
 
 #[aoc::main()]
 fn main(input: &str) -> (usize, usize) {
     let (board, start, goal) = parse_input(input);
     let p1 = part1(&board, &start, &goal);
-    let p2 = part2(&board, &goal, p1);
+    let p2 = part2(&board, &goal);
     (p1, p2)
 }
