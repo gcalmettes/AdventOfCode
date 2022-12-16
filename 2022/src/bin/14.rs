@@ -180,6 +180,7 @@ fn simulate_p2(map: &mut HashMap<Pos, Material>) -> usize {
 fn main(input: &str) -> (usize, usize) {
     let data = parse_input(input);
     let p1 = simulate(&mut data.clone(), false, false);
+    // let p2 = simulate(&mut data.clone(), true, false);
     let p2 = simulate_p2(&mut data.clone());
     (p1, p2)
 }
