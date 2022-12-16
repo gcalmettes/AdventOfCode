@@ -126,7 +126,12 @@ fn simulate(map: &mut HashMap<Pos, Material>, floor: bool, debug: bool) -> usize
                     Some(Material::Sand(_)),
                     Some(Material::Sand(_)),
                     Some(Material::Sand(_)),
-                ) => break,
+                ) => {
+                    if debug {
+                        println!("{}", display(map));
+                    };
+                    break;
+                }
                 _ => (),
             }
         } else {
