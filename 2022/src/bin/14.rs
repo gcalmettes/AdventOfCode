@@ -88,6 +88,7 @@ fn get_boundaries(map: &mut HashMap<Pos, Material>) -> (i32, i32, i32, i32) {
 
 fn simulate(map: &mut HashMap<Pos, Material>, floor: bool, debug: bool) -> usize {
     let mut current_sand = (500, 0);
+    let mut sand_path: Vec<Pos> = vec![];
     let (_, _, _, ymax) = get_boundaries(map);
 
     let mut count = 1;
@@ -99,10 +100,11 @@ fn simulate(map: &mut HashMap<Pos, Material>, floor: bool, debug: bool) -> usize
             .map(|d| (current_sand.0 + d.0, current_sand.1 + d.1))
             .find(|p| !map.contains_key(p))
         {
+            sand_path.push(current_sand);
             current_sand = sand;
         } else {
             map.insert(current_sand, Material::Sand('o'));
-            current_sand = (500, 0);
+            current_sand = sand_path.pop().unwrap();
             count += 1;
         }
 
