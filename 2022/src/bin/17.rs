@@ -94,7 +94,6 @@ fn floor_relative_pattern(chamber: &HashSet<Pos>) -> [usize; 7] {
 // and its bottom edge is three units above the highest rock in the room (or the floor, if there isn't one).
 
 fn part1(ins: &str) -> usize {
-    let mut rocks: Vec<Vec<Pos>> = vec![];
     let mut chamber: HashSet<Pos> = HashSet::new();
 
     let (mut i, mut s, mut bottom) = (0, 0, 0);
@@ -106,19 +105,16 @@ fn part1(ins: &str) -> usize {
                 .map(|c| (c.0 + 2, c.1 + bottom + 3))
                 .collect(),
         };
-        // println!(">> shape {:?}", rock.shape);
 
         loop {
             match ins.chars().nth(s % ins.len()).unwrap() {
                 '<' => {
                     let (new_shape, can_move) = rock.move_left(&chamber);
-                    // println!("moving left {}", s);
                     if can_move {
                         rock.shape = new_shape;
                     }
                 }
                 '>' => {
-                    // println!("moving right {}", s);
                     let (new_shape, can_move) = rock.move_right(&chamber);
                     if can_move {
                         rock.shape = new_shape;
@@ -135,9 +131,7 @@ fn part1(ins: &str) -> usize {
                 new_shape.iter().for_each(|c| {
                     chamber.insert(*c);
                 });
-                rocks.push(new_shape);
                 i += 1;
-                // println!("-- new rock. next sign {:?}", s);
                 // display(&chamber, bottom);
                 break;
             } else {
@@ -145,8 +139,6 @@ fn part1(ins: &str) -> usize {
             }
         }
     }
-
-    // println!("{:?}", rocks);
     bottom
 }
 
@@ -215,16 +207,17 @@ fn part2(ins: &str) -> usize {
             has_been_seen = true;
             // if combo == p {
             println!(
-                "ALREADY SEEN {} {} => {} ({}) - {} ({})",
+                "ALREADY SEEN {} {} => {} ({}) - {} ({}) - {:?}",
                 combo.0,
                 combo.1,
                 bottom,
                 bottom - state[&combo].0,
                 i,
                 i - state[&combo].1,
+                combo.2
             );
             c += 1;
-            if c > 5 {
+            if c > 3 {
                 break;
             }
             // }
