@@ -1,236 +1,193 @@
-use hashbrown::{HashMap, HashSet};
-use std::cmp::{max, min};
+use hashbrown::HashMap;
+use std::{
+    collections::{hash_map::DefaultHasher, BTreeSet},
+    hash::Hasher,
+};
 
-const SHAPES: [&[(usize, usize)]; 5] = [
-    &[(0, 0), (1, 0), (2, 0), (3, 0)],
-    &[(1, 0), (0, 1), (1, 1), (2, 1), (1, 2)],
-    &[(0, 0), (1, 0), (2, 0), (2, 1), (2, 2)],
-    &[(0, 0), (0, 1), (0, 2), (0, 3)],
-    &[(0, 0), (1, 0), (0, 1), (1, 1)],
-];
+type Pos = (i32, i32);
+type Rock = Vec<Pos>;
 
-type Pos = (usize, usize);
-
-struct Rock {
-    shape: Vec<Pos>,
+struct Chamber {
+    rocks: Vec<BTreeSet<usize>>,
+    current_rock: Option<Rock>,
 }
 
-impl Rock {
-    fn bounds(&self) -> (usize, usize, usize, usize) {
-        self.shape.iter().fold((7, 0, usize::MAX, 0), |bounds, c| {
-            (
-                min(bounds.0, c.0),
-                max(bounds.1, c.0),
-                min(bounds.2, c.1),
-                max(bounds.3, c.1),
-            )
-        })
-    }
-
-    fn move_left(&self, chamber: &HashSet<Pos>) -> (Vec<Pos>, bool) {
-        let (xmin, _, _, _) = self.bounds();
-        let can_move = xmin != 0
-            && self
-                .shape
-                .iter()
-                .all(|c| !chamber.contains(&(c.0 - 1, c.1)));
-        match can_move {
-            false => (self.shape.clone(), false),
-            true => (self.shape.iter().map(|c| (c.0 - 1, c.1)).collect(), true),
+impl Chamber {
+    fn new() -> Self {
+        Self {
+            rocks: vec![BTreeSet::new(); 7],
+            current_rock: None,
         }
     }
 
-    fn move_right(&self, chamber: &HashSet<Pos>) -> (Vec<Pos>, bool) {
-        let (_, xmax, _, _) = self.bounds();
-        let can_move = xmax != 6
-            && self
-                .shape
-                .iter()
-                .all(|c| !chamber.contains(&(c.0 + 1, c.1)));
-        // chamber is 7 units wide
-        match can_move {
-            false => (self.shape.clone(), false),
-            true => (self.shape.iter().map(|c| (c.0 + 1, c.1)).collect(), true),
-        }
+    fn move_current_rock(&mut self, (dx, dy): Pos) {
+        self.current_rock = self.current_rock.take().map(|rock| {
+            rock.iter()
+                .map(|(x, y)| (x + dx, y + dy))
+                .collect::<Vec<Pos>>()
+        });
     }
 
-    fn move_down(&self, chamber: &HashSet<Pos>) -> (Vec<Pos>, bool) {
-        let (_, _, ymin, _) = self.bounds();
-        let can_move = ymin != 0
-            && self
-                .shape
-                .iter()
-                .all(|c| !chamber.contains(&(c.0, c.1 - 1)));
-        match can_move {
-            false => (self.shape.clone(), false),
-            true => (self.shape.iter().map(|c| (c.0, c.1 - 1)).collect(), true),
-        }
+    fn insert_rock(&mut self, rock: Rock) {
+        self.current_rock = Some(rock);
+        self.move_current_rock((2, 0)); // 2 units from the right.
+        self.move_current_rock((0, self.height() as i32 + 3)); // 3 units above the highest rock.
     }
-}
 
-fn display(chamber: &HashSet<Pos>, ymax: usize) {
-    (0..=ymax).rev().for_each(|y| {
-        print!("\n");
-        (0..7).for_each(|x| match chamber.contains(&(x, y)) {
-            true => print!("#"),
-            false => print!("."),
-        })
-    });
-    print!("\n\n");
-}
-
-fn floor_relative_pattern(chamber: &HashSet<Pos>) -> [usize; 7] {
-    let mut pattern = [0; 7];
-    chamber.iter().for_each(|c| {
-        pattern[c.0] = max(pattern[c.0], c.1);
-    });
-    let minimum = pattern.into_iter().min().unwrap();
-    (0..7).for_each(|i| pattern[i] = pattern[i] - minimum);
-    pattern
-}
-
-// seven units wide.
-// Each rock appears so that its left edge is two units away from the left wall
-// and its bottom edge is three units above the highest rock in the room (or the floor, if there isn't one).
-
-fn part1(ins: &str) -> usize {
-    let mut chamber: HashSet<Pos> = HashSet::new();
-
-    let (mut i, mut s, mut bottom) = (0, 0, 0);
-
-    while i < 2022 {
-        let mut rock = Rock {
-            shape: SHAPES[i % SHAPES.len()]
-                .iter()
-                .map(|c| (c.0 + 2, c.1 + bottom + 3))
-                .collect(),
+    fn run(&mut self, op: char) {
+        let offset = match op {
+            '<' => (-1, 0),
+            '>' => (1, 0),
+            _ => unreachable!(),
         };
 
-        loop {
-            match ins.chars().nth(s % ins.len()).unwrap() {
-                '<' => {
-                    let (new_shape, can_move) = rock.move_left(&chamber);
-                    if can_move {
-                        rock.shape = new_shape;
-                    }
-                }
-                '>' => {
-                    let (new_shape, can_move) = rock.move_right(&chamber);
-                    if can_move {
-                        rock.shape = new_shape;
-                    }
-                }
-                _ => unreachable!(),
-            }
-            s += 1;
+        if self.can_move(offset) {
+            self.move_current_rock(offset);
+        }
 
-            let (new_shape, can_move) = rock.move_down(&chamber);
-            if !can_move {
-                let (_, _, _, ymax) = rock.bounds();
-                bottom = max(ymax + 1, bottom);
-                new_shape.iter().for_each(|c| {
-                    chamber.insert(*c);
-                });
-                i += 1;
-                // display(&chamber, bottom);
-                break;
-            } else {
-                rock.shape = new_shape;
+        if !self.can_move((0, -1)) {
+            self.solidify();
+        } else {
+            self.move_current_rock((0, -1))
+        }
+    }
+
+    fn height(&self) -> usize {
+        self.rocks
+            .iter()
+            .map(|s| s.last().map(|h| h + 1).unwrap_or(0))
+            .max()
+            .unwrap_or(0)
+    }
+
+    fn floor(&self) -> usize {
+        self.rocks
+            .iter()
+            .map(|s| s.last().map(|h| h + 1).unwrap_or(0))
+            .min()
+            .unwrap_or(0)
+    }
+
+    fn can_move(&self, (dx, dy): Pos) -> bool {
+        self.current_rock
+            .as_ref()
+            .map(|shape| shape.iter().all(|(x, y)| self.is_empty((x + dx, y + dy))))
+            .unwrap_or(false)
+    }
+
+    fn solidify(&mut self) {
+        if let Some(rock) = self.current_rock.take() {
+            for (x, y) in rock.into_iter() {
+                self.rocks[x as usize].insert(y as usize);
             }
         }
     }
-    bottom
-}
 
-fn part2(ins: &str) -> usize {
-    let mut chamber: HashSet<Pos> = HashSet::new();
-    let mut state: HashMap<(usize, usize, [usize; 7]), (usize, usize)> = HashMap::new();
+    fn is_empty(&self, (x, y): Pos) -> bool {
+        self.in_bounds((x, y)) && !self.rocks[x as usize].contains(&(y as usize))
+    }
 
-    let (mut i, mut s, mut bottom) = (0, 0, 0);
-    let mut c = 0;
-    let mut p = (0, 0, floor_relative_pattern(&chamber));
-    let mut has_been_seen = false;
-    while i < 1_000_000_000_000 {
-        let rock_pos = i % SHAPES.len();
-        let dir_pos = s % ins.len();
+    fn in_bounds(&self, (x, y): Pos) -> bool {
+        (0..7).contains(&x) && y >= 0
+    }
 
-        let mut rock = Rock {
-            shape: SHAPES[rock_pos]
+    #[allow(unused)]
+    fn draw(&self) {
+        println!("{:?}", self.rocks);
+        let lines = (0..self.height() + 7).rev().map(|y| {
+            self.rocks
                 .iter()
-                .map(|c| (c.0 + 2, c.1 + bottom + 3))
-                .collect(),
-        };
-        // println!(">> shape {:?}", rock.shape);
-
-        loop {
-            match ins.chars().nth(dir_pos).unwrap() {
-                '<' => {
-                    let (new_shape, can_move) = rock.move_left(&chamber);
-                    // println!("moving left {}", s);
-                    if can_move {
-                        rock.shape = new_shape;
+                .enumerate()
+                .map(|(x, col)| {
+                    if col.contains(&y) {
+                        '#'
+                    } else {
+                        match &self.current_rock {
+                            Some(shape) if shape.contains(&(x as i32, y as i32)) => '@',
+                            _ => '.',
+                        }
                     }
-                }
-                '>' => {
-                    // println!("moving right {}", s);
-                    let (new_shape, can_move) = rock.move_right(&chamber);
-                    if can_move {
-                        rock.shape = new_shape;
-                    }
-                }
-                _ => unreachable!(),
-            }
-            s += 1;
-
-            let (new_shape, can_move) = rock.move_down(&chamber);
-            if !can_move {
-                let (_, _, _, ymax) = rock.bounds();
-                bottom = max(ymax + 1, bottom);
-                new_shape.iter().for_each(|c| {
-                    chamber.insert(*c);
-                });
-                // rocks.push(new_shape);
-                i += 1;
-                // println!("-- new rock. next sign {:?}", s);
-                // display(&chamber, bottom);
-                break;
-            } else {
-                rock.shape = new_shape;
-            }
+                })
+                .collect::<String>()
+        });
+        println!("\n\n\n");
+        for line in lines {
+            println!("{}", line)
         }
-
-        let combo = (rock_pos, dir_pos, floor_relative_pattern(&chamber));
-        if !has_been_seen {
-            p = combo;
-        }
-        if state.contains_key(&combo) {
-            has_been_seen = true;
-            // if combo == p {
-            println!(
-                "ALREADY SEEN {} {} => {} ({}) - {} ({}) - {:?}",
-                combo.0,
-                combo.1,
-                bottom,
-                bottom - state[&combo].0,
-                i,
-                i - state[&combo].1,
-                combo.2
-            );
-            c += 1;
-            if c > 3 {
-                break;
-            }
-            // }
-        };
-        state.insert(combo, (bottom, i));
     }
-
-    bottom
 }
 
-#[aoc::main("test")]
+fn simulate(input: &str, mut stop_at: usize) -> usize {
+    let rocks = [
+        vec![(0, 0), (1, 0), (2, 0), (3, 0)],         // h line
+        vec![(1, 0), (0, 1), (1, 1), (2, 1), (1, 2)], // cross
+        vec![(0, 0), (1, 0), (2, 0), (2, 1), (2, 2)], // L
+        vec![(0, 0), (0, 1), (0, 2), (0, 3)],         // v line
+        vec![(0, 0), (1, 0), (0, 1), (1, 1)],         // square
+    ];
+
+    let mut chamber = Chamber::new();
+
+    // our cyclers !
+    let mut input = input.chars().enumerate().cycle();
+    let rocks = rocks.iter().enumerate().cycle().enumerate();
+
+    // cache has a hash as key and (iteration number, chamber height) as value
+    let mut cache: HashMap<u64, (usize, usize)> = HashMap::new();
+    let mut computed_height_offset = 0;
+    for (iterations, (rock_idx, rock)) in rocks {
+        if iterations == stop_at {
+            break;
+        }
+
+        // New rock is in play !
+        chamber.insert_rock(rock.to_vec());
+        let mut dir_idx = 0;
+        while chamber.current_rock.is_some() {
+            let (i, dir) = input.next().expect("no end as it's a cycle");
+            chamber.run(dir);
+            dir_idx = i;
+        }
+
+        // Now let's hash and store the height to find any state repetitions
+        let mut hasher = DefaultHasher::new();
+        hasher.write_usize(dir_idx); // If we are in the same move cycle
+        hasher.write_usize(rock_idx); // and in the same shape cycle
+        let floor = chamber.floor();
+        for col in &chamber.rocks {
+            hasher.write_usize(col.last().unwrap_or(&0) + 1 - floor); // and the floor looks the same
+        }
+        let hash = hasher.finish();
+
+        let height = chamber.height();
+
+        // if we found a similar item in our cache, let's calculate the cycle length and
+        // and artificially run the simulation n times
+        if let Some((last_iteration, last_height)) = cache.get(&hash) {
+            let delta_height = height - last_height;
+            let iterations_cycle = iterations - last_iteration;
+
+            // Note: iterations starts at zero
+            let repeats = (stop_at - (iterations + 1)) / iterations_cycle; //
+
+            // make sure we need to run less more iterations than the cycle size
+            if repeats > 0 {
+                // we artificially decrease the number of iterations at which to stop
+                // since the iterations number comes from the iterator
+                stop_at -= repeats * iterations_cycle;
+                computed_height_offset += repeats * delta_height;
+            }
+        } else {
+            cache.insert(hash, (iterations, height));
+        }
+    }
+
+    chamber.height() + computed_height_offset
+}
+
+#[aoc::main()]
 fn main(input: &str) -> (usize, usize) {
-    let p1 = part1(&input);
-    let p2 = part2(&input);
+    let p1 = simulate(&input, 2022);
+    let p2 = simulate(&input, 1_000_000_000_000);
     (p1, p2)
 }
