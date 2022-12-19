@@ -1,5 +1,5 @@
 use itertools::Itertools;
-use serde_json::{Number, Value};
+use serde_json::Value;
 use std::cmp::{max, Ordering};
 
 fn parse_input(input: &str) -> Vec<Value> {
