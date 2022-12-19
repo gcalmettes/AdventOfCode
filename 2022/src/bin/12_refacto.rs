@@ -18,8 +18,8 @@ fn parse_input(input: &str) -> (Matrix<usize>, Pos, Pos) {
             .map(|line| line.chars().map(|c| (ALPHABET.find(c).unwrap()) as usize)),
     )
     .unwrap();
-    let start = m.indices().find(|&pos| m[pos] == 0).unwrap();
-    let goal = m.indices().find(|&pos| m[pos] == 27).unwrap();
+    let start = m.keys().find(|&pos| m[pos] == 0).unwrap();
+    let goal = m.keys().find(|&pos| m[pos] == 27).unwrap();
     // back to corresponding values
     m[start] = 1;
     m[goal] = 26;
