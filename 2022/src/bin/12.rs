@@ -1,123 +1,72 @@
-use hashbrown::HashMap;
 use once_cell::sync::Lazy;
-use pathfinding::prelude::dijkstra;
+use pathfinding::matrix::Matrix;
+use pathfinding::prelude::bfs;
 
-static ALPHABET: Lazy<String> = Lazy::new(|| ('a'..='z').into_iter().collect::<String>());
+static ALPHABET: Lazy<String> = Lazy::new(|| {
+    let mut s = String::from("S");
+    s.extend(('a'..='z').into_iter());
+    s.push('E');
+    s
+});
 
-#[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
-struct Pos(usize, usize);
+type Pos = (usize, usize);
 
-impl Pos {
-    fn successors(&self, map: &HashMap<Pos, isize>, dim: &(usize, usize)) -> Vec<(Pos, isize)> {
-        let &Pos(x, y) = self;
-        let value = map.get(self).unwrap();
-        let mut neighbors: Vec<Pos> = vec![];
+fn parse_input(input: &str) -> (Matrix<usize>, Pos, Pos) {
+    let mut m = Matrix::from_rows(
+        input
+            .lines()
+            .map(|line| line.chars().map(|c| (ALPHABET.find(c).unwrap()) as usize)),
+    )
+    .unwrap();
+    let start = m.keys().find(|&pos| m[pos] == 0).unwrap();
+    let goal = m.keys().find(|&pos| m[pos] == 27).unwrap();
+    // back to corresponding values
+    m[start] = 1;
+    m[goal] = 26;
+    (m, start, goal)
+}
 
-        if x < dim.0 - 1 {
-            let cmp = Pos(x + 1, y);
-            if map.get(&cmp).unwrap() - value <= 1 {
-                neighbors.push(cmp)
-            }
-        }
-        if y < dim.1 - 1 {
-            let cmp = Pos(x, y + 1);
-            if map.get(&cmp).unwrap() - value <= 1 {
-                neighbors.push(cmp)
-            }
-        }
-        if x > 0 {
-            let cmp = Pos(x - 1, y);
-            if map.get(&cmp).unwrap() - value <= 1 {
-                neighbors.push(cmp)
-            }
-        }
-        if y > 0 {
-            let cmp = Pos(x, y - 1);
-            if map.get(&cmp).unwrap() - value <= 1 {
-                neighbors.push(cmp)
-            }
-        }
-
-        neighbors
-            .into_iter()
-            .map(|p| {
-                let v = map.get(&p).unwrap();
-                (p, *v)
+fn part1(m: &Matrix<usize>, start: &Pos, goal: &Pos) -> usize {
+    if let Some(path) = bfs(
+        start,
+        |&p| {
+            m.neighbours(p, false).into_iter().filter(move |n| {
+                // neighbors as to be at most 1 step above,
+                // but can lower without restriction
+                (0..=(m[p] + 1)).contains(&m[*n])
             })
-            .collect::<Vec<(Pos, isize)>>()
+        },
+        |&p| p == *goal,
+    ) {
+        path.len() - 1
+    } else {
+        0
     }
 }
 
-fn parse_input(input: &str) -> (HashMap<Pos, isize>, (usize, usize), Vec<Pos>, Pos) {
-    let nrows = input.lines().next().unwrap().len();
-    let ncols = input.lines().collect::<Vec<_>>().len();
-    let mut starts: Vec<Pos> = vec![];
-    let mut goal = Pos(0, 0);
-    let mut board: HashMap<Pos, isize> = HashMap::new();
-    input.lines().enumerate().for_each(|(y, line)| {
-        line.chars().enumerate().for_each(|(x, c)| {
-            match c {
-                'S' => {
-                    // we insert true start as first position in vec
-                    starts.insert(0, Pos(x, y));
-                    board.insert(Pos(x, y), 1);
-                }
-                'E' => {
-                    goal = Pos(x, y);
-                    board.insert(Pos(x, y), 26);
-                }
-                'a' => {
-                    starts.push(Pos(x, y));
-                    board.insert(Pos(x, y), 1);
-                }
-                _ => {
-                    board.insert(Pos(x, y), (ALPHABET.find(c).unwrap() + 1) as isize);
-                }
-            };
-        });
-    });
-    (board, (nrows, ncols), starts, goal)
-}
-
-fn part1(data: &HashMap<Pos, isize>, dim: &(usize, usize), start: &Pos, goal: &Pos) -> usize {
-    let result = dijkstra(
-        start,
-        |p| p.successors(data, dim),
-        |p| p == &Pos(goal.0, goal.1),
-    );
-    let (path, _score) = result.unwrap();
-    path.len() - 1
-}
-
-fn part2(
-    data: &HashMap<Pos, isize>,
-    dim: &(usize, usize),
-    starts: &Vec<Pos>,
-    goal: &Pos,
-    p1: usize,
-) -> usize {
-    starts
-        .iter()
-        .map(|pos| {
-            let result = dijkstra(
-                pos,
-                |p| p.successors(data, dim),
-                |p| p == &Pos(goal.0, goal.1),
-            );
-            if let Some((path, _score)) = result {
-                path.len() - 1
-            } else {
-                p1
-            }
-        })
-        .min()
-        .unwrap()
+fn part2(m: &Matrix<usize>, goal: &Pos) -> usize {
+    // we start from the goal and stop as soon as we hit a 'a'
+    if let Some(path) = bfs(
+        goal,
+        |&p| {
+            m.neighbours(p, false).into_iter().filter(move |n| {
+                // neighbors as to be at most 1 step above,
+                // but can lower without restriction
+                ((m[p] - 1)..27).contains(&m[*n])
+            })
+        },
+        |&p| m[p] == 1,
+    ) {
+        path.len() - 1
+    } else {
+        0
+    }
 }
 
 #[aoc::main()]
 fn main(input: &str) -> (usize, usize) {
-    let (board, dim, starts, goal) = parse_input(input);
-    let p1 = part1(&board, &dim, &starts[0], &goal);
-    let p2 = part2(&board, &dim, &starts, &goal, p1);
+    let (board, start, goal) = parse_input(input);
+    let p1 = part1(&board, &start, &goal);
+    let p2 = part2(&board, &goal);
     (p1, p2)
 }
