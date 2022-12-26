@@ -205,9 +205,181 @@ fn part1(board: &HashMap<Pos, Tile>, ins: &Vec<Ins>) -> isize {
     1000 * row + 4 * col + facing
 }
 
+fn get_wrapped_cube_tile(current_pos: Pos, step: Pos) -> (Pos, Pos) {
+    const FACE_SIZE: isize = 50;
+    let current_face = match (current_pos.0 / FACE_SIZE, current_pos.1 / FACE_SIZE) {
+        (1, 0) => 1,
+        (2, 0) => 2,
+        (1, 1) => 3,
+        (0, 2) => 4,
+        (1, 2) => 5,
+        (0, 3) => 6,
+        _ => panic!("Unexpected position: {:?}", current_pos),
+    };
+
+    let mut new_pos = current_pos;
+    let mut new_step = step;
+    new_pos.0 += step.0;
+    new_pos.1 += step.1;
+    match current_face {
+        1 => match step {
+            (1, 0) => {}
+            (0, 1) => {}
+            (-1, 0) => {
+                new_step = (1, 0);
+                new_pos.0 = 0;
+                new_pos.1 = FACE_SIZE * 3 - current_pos.1 - 1;
+            }
+            (0, -1) => {
+                new_step = (1, 0);
+                new_pos.0 = 0;
+                new_pos.1 = current_pos.0 + FACE_SIZE * 2;
+            }
+            _ => panic!("Unexpected direction: {:?}", step),
+        },
+        2 => match step {
+            (1, 0) => {
+                new_step = (-1, 0);
+                new_pos.0 = current_pos.0 - FACE_SIZE;
+                new_pos.1 = FACE_SIZE * 3 - current_pos.1 - 1;
+            }
+            (0, 1) => {
+                new_step = (-1, 0);
+                new_pos.0 = FACE_SIZE * 2 - 1;
+                new_pos.1 = current_pos.0 - FACE_SIZE;
+            }
+            (-1, 0) => {}
+            (0, -1) => {
+                new_step = (0, -1);
+                new_pos.0 = current_pos.0 - FACE_SIZE * 2;
+                new_pos.1 = FACE_SIZE * 4 - 1;
+            }
+            _ => panic!("Unexpected direction: {:?}", step),
+        },
+        3 => match step {
+            (1, 0) => {
+                new_step = (0, -1);
+                new_pos.0 = current_pos.1 + FACE_SIZE;
+                new_pos.1 = FACE_SIZE - 1;
+            }
+            (0, 1) => {}
+            (-1, 0) => {
+                new_step = (0, 1);
+                new_pos.0 = current_pos.1 - FACE_SIZE;
+                new_pos.1 = FACE_SIZE * 2;
+            }
+            (0, -1) => {}
+            _ => panic!("Unexpected direction: {:?}", step),
+        },
+        4 => match step {
+            (1, 0) => {}
+            (0, 1) => {}
+            (-1, 0) => {
+                new_step = (1, 0);
+                new_pos.0 = FACE_SIZE;
+                new_pos.1 = 3 * FACE_SIZE - current_pos.1 - 1;
+            }
+            (0, -1) => {
+                new_step = (1, 0);
+                new_pos.0 = FACE_SIZE;
+                new_pos.1 = current_pos.0 + FACE_SIZE;
+            }
+            _ => panic!("Unexpected direction: {:?}", step),
+        },
+        5 => match step {
+            (1, 0) => {
+                new_step = (-1, 0);
+                new_pos.0 = FACE_SIZE * 3 - 1;
+                new_pos.1 = 3 * FACE_SIZE - current_pos.1 - 1;
+            }
+            (0, 1) => {
+                new_step = (-1, 0);
+                new_pos.0 = FACE_SIZE - 1;
+                new_pos.1 = current_pos.0 + FACE_SIZE * 2;
+            }
+            (-1, 0) => {}
+            (0, -1) => {}
+            _ => panic!("Unexpected direction: {:?}", step),
+        },
+        6 => match step {
+            (1, 0) => {
+                new_step = (0, -1);
+                new_pos.0 = current_pos.1 - 2 * FACE_SIZE;
+                new_pos.1 = FACE_SIZE * 3 - 1;
+            }
+            (0, 1) => {
+                new_step = (0, 1);
+                new_pos.0 = current_pos.0 + FACE_SIZE * 2;
+                new_pos.1 = 0;
+            }
+            (-1, 0) => {
+                new_step = (0, 1);
+                new_pos.0 = current_pos.1 - FACE_SIZE * 2;
+                new_pos.1 = 0;
+            }
+            (0, -1) => {}
+            _ => panic!("Unexpected direction: {:?}", step),
+        },
+        _ => panic!("Unexpected face: {}", current_face),
+    }
+
+    (new_pos, new_step)
+}
+
 fn part2(board: &HashMap<Pos, Tile>, ins: &Vec<Ins>) -> isize {
-    // TODO
-    0
+    let mut ins = ins.iter();
+    let start_pos = get_start(board);
+
+    let mut step: (isize, isize) = (1, 0);
+    let mut current_pos = start_pos;
+
+    loop {
+        match ins.next() {
+            Some(Ins::Forward(x)) => {
+                for _ in 0..*x {
+                    let next_pos = (current_pos.0 + step.0, current_pos.1 + step.1);
+                    match board.get(&next_pos) {
+                        Some(Tile::Empty) => {
+                            // move to tile
+                            current_pos = next_pos;
+                        }
+                        Some(Tile::Wall) => {
+                            // cannot go forward, skip to next instruction
+                            break;
+                        }
+                        None => {
+                            // need to wrap around
+                            let (opposite_pos, new_step) = get_wrapped_cube_tile(current_pos, step);
+                            match board.get(&opposite_pos) {
+                                Some(Tile::Wall) => {
+                                    // cannot go forward, skip to next instruction
+                                    break;
+                                }
+                                _ => (),
+                            }
+                            current_pos = opposite_pos;
+                            step = new_step;
+                        }
+                    }
+                }
+            }
+
+            Some(Ins::Turn(f)) => {
+                step = f(step);
+            }
+            None => break,
+        }
+    }
+    let row = current_pos.1 + 1;
+    let col = current_pos.0 + 1;
+    let facing = match step {
+        (1, 0) => 0,
+        (0, 1) => 1,
+        (-1, 0) => 2,
+        (0, -1) => 3,
+        _ => unreachable!(),
+    };
+    1000 * row + 4 * col + facing
 }
 
 #[aoc::main()]
