@@ -112,7 +112,7 @@ fn get_start(board: &HashMap<Pos, Tile>) -> Pos {
     (x_start as isize, min_y as isize)
 }
 
-fn get_opposite_tile(board: &HashMap<Pos, Tile>, current_pos: Pos, step: Pos) -> Pos {
+fn get_opposite_tile(board: &HashMap<Pos, Tile>, current_pos: Pos, step: Pos) -> (Pos, Pos) {
     match step {
         (0, v) => {
             // same x
@@ -128,7 +128,7 @@ fn get_opposite_tile(board: &HashMap<Pos, Tile>, current_pos: Pos, step: Pos) ->
                 // we go north so go to max
                 y.max().unwrap()
             };
-            (x, y)
+            ((x, y), step)
         }
         (v, 0) => {
             // same x
@@ -144,68 +144,13 @@ fn get_opposite_tile(board: &HashMap<Pos, Tile>, current_pos: Pos, step: Pos) ->
                 // we go west so go to max
                 x.max().unwrap()
             };
-            (x, y)
+            ((x, y), step)
         }
         _ => unreachable!(),
     }
 }
 
-fn part1(board: &HashMap<Pos, Tile>, ins: &Vec<Ins>) -> isize {
-    let mut ins = ins.iter();
-    let start_pos = get_start(board);
-
-    let mut step: (isize, isize) = (1, 0);
-    let mut current_pos = start_pos;
-
-    loop {
-        match ins.next() {
-            Some(Ins::Forward(x)) => {
-                for _ in 0..*x {
-                    let next_pos = (current_pos.0 + step.0, current_pos.1 + step.1);
-                    match board.get(&next_pos) {
-                        Some(Tile::Empty) => {
-                            // move to tile
-                            current_pos = next_pos;
-                        }
-                        Some(Tile::Wall) => {
-                            // cannot go forward, skip to next instruction
-                            break;
-                        }
-                        None => {
-                            // need to wrap around
-                            let opposite_pos = get_opposite_tile(board, current_pos, step);
-                            match board.get(&opposite_pos) {
-                                Some(Tile::Wall) => {
-                                    // cannot go forward, skip to next instruction
-                                    break;
-                                }
-                                _ => (),
-                            }
-                            current_pos = opposite_pos;
-                        }
-                    }
-                }
-            }
-
-            Some(Ins::Turn(f)) => {
-                step = f(step);
-            }
-            None => break,
-        }
-    }
-    let row = current_pos.1 + 1;
-    let col = current_pos.0 + 1;
-    let facing = match step {
-        (1, 0) => 0,
-        (0, 1) => 1,
-        (-1, 0) => 2,
-        (0, -1) => 3,
-        _ => unreachable!(),
-    };
-    1000 * row + 4 * col + facing
-}
-
-fn get_wrapped_cube_tile(current_pos: Pos, step: Pos) -> (Pos, Pos) {
+fn get_wrapped_cube_tile(_board: &HashMap<Pos, Tile>, current_pos: Pos, step: Pos) -> (Pos, Pos) {
     const FACE_SIZE: isize = 50;
     let current_face = match (current_pos.0 / FACE_SIZE, current_pos.1 / FACE_SIZE) {
         (1, 0) => 1,
@@ -326,7 +271,12 @@ fn get_wrapped_cube_tile(current_pos: Pos, step: Pos) -> (Pos, Pos) {
     (new_pos, new_step)
 }
 
-fn part2(board: &HashMap<Pos, Tile>, ins: &Vec<Ins>) -> isize {
+fn run(
+    board: &HashMap<Pos, Tile>,
+    ins: &Vec<Ins>,
+
+    get_tile: impl Fn(&HashMap<Pos, Tile>, Pos, Pos) -> (Pos, Pos),
+) -> isize {
     let mut ins = ins.iter();
     let start_pos = get_start(board);
 
@@ -349,7 +299,7 @@ fn part2(board: &HashMap<Pos, Tile>, ins: &Vec<Ins>) -> isize {
                         }
                         None => {
                             // need to wrap around
-                            let (opposite_pos, new_step) = get_wrapped_cube_tile(current_pos, step);
+                            let (opposite_pos, new_step) = get_tile(board, current_pos, step);
                             match board.get(&opposite_pos) {
                                 Some(Tile::Wall) => {
                                     // cannot go forward, skip to next instruction
@@ -385,7 +335,7 @@ fn part2(board: &HashMap<Pos, Tile>, ins: &Vec<Ins>) -> isize {
 #[aoc::main()]
 fn main(input: &str) -> (isize, isize) {
     let (board, ins) = parse_input(input);
-    let p1 = part1(&board, &ins);
-    let p2 = part2(&board, &ins);
+    let p1 = run(&board, &ins, get_opposite_tile);
+    let p2 = run(&board, &ins, get_wrapped_cube_tile);
     (p1, p2)
 }
