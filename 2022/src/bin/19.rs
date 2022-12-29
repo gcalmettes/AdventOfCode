@@ -1,5 +1,6 @@
 use hashbrown::HashMap;
 use itertools::Itertools;
+use rayon::prelude::*;
 use regex::Regex;
 use std::collections::VecDeque;
 
@@ -69,10 +70,7 @@ fn need_more(time_left: u64, current_stock: u64, current_production: u64, max: u
     !(current_production >= max || time_left * current_production + current_stock > time_left * max)
 }
 
-fn part1(blueprints: &Vec<Blueprint>) -> usize {
-    println!("robots: {:?}", blueprints);
-
-    const STARTING_TIME: u64 = 24;
+fn get_best_geode_for(blueprint: &Blueprint, time: u64) -> u64 {
     let mut to_check: VecDeque<(Pack, Pack, Stock, u64)> = VecDeque::new();
 
     // we start with 1 Ore robot in our pack
@@ -97,14 +95,7 @@ fn part1(blueprints: &Vec<Blueprint>) -> usize {
     ]);
 
     // add starting state
-    to_check.push_back((
-        starting_pack,
-        starting_pending,
-        starting_minerals,
-        STARTING_TIME,
-    ));
-
-    let blueprint = &blueprints[0];
+    to_check.push_back((starting_pack, starting_pending, starting_minerals, time));
 
     // The robot factory can only produce 1 robot per turn,
     // so no need to produce more minerals than the max that can
@@ -124,16 +115,14 @@ fn part1(blueprints: &Vec<Blueprint>) -> usize {
         if time == 0 {
             continue;
         };
-        best_geodes = best_geodes.max(minerals[&Mineral::Geode]);
-
-        // stop if this path lead to less geode at the same time
-        // -1 is because we also update the best geodes at the end of the round so we want to
-        // compare at starting time.
+        // Continue only if it is potentially a path equally performing than the current best state
+        // or if a similar state is not already present in the paths to continue.
+        // Because we compare before the production of the turn, we check the best minus 1.
         if minerals[&Mineral::Geode] < best_geodes.max(1) - 1
             || to_check.contains(&(pack.clone(), pending.clone(), minerals.clone(), time))
         {
             continue;
-        };
+        }
 
         // Each turn we can do 5 actions.
         // Creating one type of robot or do nothing.
@@ -205,11 +194,25 @@ fn part1(blueprints: &Vec<Blueprint>) -> usize {
                             *pending.get_mut(&robot).unwrap() = 0;
                         });
 
-                        println!(
-                            "Pack: {:?}, Minerals: {:?}, ({}) -- {}",
-                            pack, minerals, time, best_geodes
-                        );
-                        to_check.push_back((pack, pending, minerals, time - 1));
+                        // Potentially update current best, now that minerals production has
+                        // occured.
+                        best_geodes = best_geodes.max(minerals[&Mineral::Geode]);
+                        // Continue with this path only if it is at least equal to the current best state
+                        // or if a similar state is not already present in the paths to continue
+                        if !(minerals[&Mineral::Geode] < best_geodes
+                            || to_check.contains(&(
+                                pack.clone(),
+                                pending.clone(),
+                                minerals.clone(),
+                                time,
+                            )))
+                        {
+                            // println!(
+                            //     "Pack: {:?}, Minerals: {:?}, ({}) -- {}",
+                            //     pack, minerals, time, best_geodes
+                            // );
+                            to_check.push_back((pack, pending, minerals, time - 1));
+                        };
                     }
                     None => (),
                 }
@@ -229,29 +232,43 @@ fn part1(blueprints: &Vec<Blueprint>) -> usize {
                     *minerals.get_mut(mineral).unwrap() += *quantity;
                 });
 
-                best_geodes = best_geodes.max(minerals[&Mineral::Geode]);
-
                 // add pending robot to pack
                 pending.clone().into_iter().for_each(|(robot, quantity)| {
                     *pack.get_mut(&robot).unwrap() += quantity;
                     *pending.get_mut(&robot).unwrap() = 0;
                 });
 
-                println!(
-                    "Pack: {:?}, Minerals: {:?}, ({}) -- {}",
-                    pack, minerals, time, best_geodes
-                );
-                to_check.push_back((pack, pending, minerals, time - 1));
+                // Potentially update current best, now that minerals production has
+                // occured.
+                best_geodes = best_geodes.max(minerals[&Mineral::Geode]);
+                // Continue with this path only if it is at least equal to the current best state
+                // or if a similar state is not already present in the paths to continue
+                if !(minerals[&Mineral::Geode] < best_geodes
+                    || to_check.contains(&(pack.clone(), pending.clone(), minerals.clone(), time)))
+                {
+                    // println!(
+                    //     "Pack: {:?}, Minerals: {:?}, ({}) -- {}",
+                    //     pack, minerals, time, best_geodes
+                    // );
+                    to_check.push_back((pack, pending, minerals, time - 1));
+                };
             }
             // println!("Queue length: {}", to_check.len());
         });
     }
+    best_geodes
+}
 
-    println!("Geodes: {}", best_geodes);
-    // println!("MINERALS: {:?}", minerals);
-    // println!("PACK: {:?}", pack);
-    // println!("MAX NEEDED: {:?}", max_needed_minerals);
-    0
+fn part1(blueprints: &Vec<Blueprint>) -> u64 {
+    const STARTING_TIME: u64 = 24;
+    blueprints
+        .par_iter()
+        .enumerate()
+        .map(|(id, blueprint)| {
+            let geodes = get_best_geode_for(blueprint, STARTING_TIME);
+            geodes * ((id + 1) as u64)
+        })
+        .sum()
 }
 
 // fn part2(blueprints: &Vec<Robot>) -> usize {
@@ -259,7 +276,7 @@ fn part1(blueprints: &Vec<Blueprint>) -> usize {
 // }
 
 #[aoc::main("test")]
-fn main(input: &str) -> (usize, usize) {
+fn main(input: &str) -> (u64, u64) {
     let blueprints = parse_input(input);
     let p1 = part1(&blueprints);
     // let p2 = part2(&blueprints);
