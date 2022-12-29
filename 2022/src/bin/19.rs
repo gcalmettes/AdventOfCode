@@ -25,11 +25,15 @@ type Blueprint = HashMap<Robot, HashMap<Mineral, u64>>;
 type Pack = HashMap<Robot, u64>;
 type Stock = HashMap<Mineral, u64>;
 
-fn parse_input(input: &str) -> Vec<Blueprint> {
+fn parse_input(input: &str) -> Vec<(u64, Blueprint)> {
     let re = Regex::new(r"Each (\w+) robot costs (\d+) (\w+)[.|\s](?:and (\d+) (\w+))?").unwrap();
-    let mut blueprints: Vec<Blueprint> = vec![];
+    let mut blueprints: Vec<(u64, Blueprint)> = vec![];
     input.lines().for_each(|line| {
         let mut blueprint: Blueprint = HashMap::new();
+        let (id_part, _) = line.split_once(": ").unwrap();
+        let (_, id) = id_part.split_once(" ").unwrap();
+        let id = id.parse::<u64>().unwrap();
+
         re.captures_iter(&line).for_each(|c| {
             let robot = c.get(1).unwrap().as_str();
             let mut price: HashMap<Mineral, u64> = HashMap::new();
@@ -61,7 +65,7 @@ fn parse_input(input: &str) -> Vec<Blueprint> {
             };
             blueprint.insert(robot, price);
         });
-        blueprints.push(blueprint);
+        blueprints.push((id, blueprint));
     });
     blueprints
 }
@@ -207,10 +211,6 @@ fn get_best_geode_for(blueprint: &Blueprint, time: u64) -> u64 {
                                 time,
                             )))
                         {
-                            // println!(
-                            //     "Pack: {:?}, Minerals: {:?}, ({}) -- {}",
-                            //     pack, minerals, time, best_geodes
-                            // );
                             to_check.push_back((pack, pending, minerals, time - 1));
                         };
                     }
@@ -246,10 +246,6 @@ fn get_best_geode_for(blueprint: &Blueprint, time: u64) -> u64 {
                 if !(minerals[&Mineral::Geode] < best_geodes
                     || to_check.contains(&(pack.clone(), pending.clone(), minerals.clone(), time)))
                 {
-                    // println!(
-                    //     "Pack: {:?}, Minerals: {:?}, ({}) -- {}",
-                    //     pack, minerals, time, best_geodes
-                    // );
                     to_check.push_back((pack, pending, minerals, time - 1));
                 };
             }
@@ -259,14 +255,14 @@ fn get_best_geode_for(blueprint: &Blueprint, time: u64) -> u64 {
     best_geodes
 }
 
-fn part1(blueprints: &Vec<Blueprint>) -> u64 {
+fn part1(blueprints: &Vec<(u64, Blueprint)>) -> u64 {
     const STARTING_TIME: u64 = 24;
     blueprints
         .par_iter()
-        .enumerate()
         .map(|(id, blueprint)| {
             let geodes = get_best_geode_for(blueprint, STARTING_TIME);
-            geodes * ((id + 1) as u64)
+            println!(">> {}", geodes * id);
+            geodes * id
         })
         .sum()
 }
@@ -275,7 +271,7 @@ fn part1(blueprints: &Vec<Blueprint>) -> u64 {
 //     0
 // }
 
-#[aoc::main("test")]
+#[aoc::main()]
 fn main(input: &str) -> (u64, u64) {
     let blueprints = parse_input(input);
     let p1 = part1(&blueprints);
