@@ -1,25 +1,28 @@
 use hashbrown::HashMap;
 use itertools::Itertools;
 use regex::Regex;
+use std::collections::VecDeque;
 
 #[derive(Debug, Hash, Eq, PartialEq, Copy, Clone)]
-enum Currency {
+enum Mineral {
     Ore,
     Clay,
     Obsidian,
     Geode,
 }
 
-// The value is the currency it produces
+// The value is the mineral it produces
 #[derive(Debug, Hash, Eq, PartialEq, Clone, Copy)]
 enum Robot {
-    Ore(Currency),
-    Clay(Currency),
-    Obsidian(Currency),
-    Geode(Currency),
+    Ore(Mineral),
+    Clay(Mineral),
+    Obsidian(Mineral),
+    Geode(Mineral),
 }
 
-type Blueprint = HashMap<Robot, HashMap<Currency, u64>>;
+type Blueprint = HashMap<Robot, HashMap<Mineral, u64>>;
+type Pack = HashMap<Robot, u64>;
+type Stock = HashMap<Mineral, u64>;
 
 fn parse_input(input: &str) -> Vec<Blueprint> {
     let re = Regex::new(r"Each (\w+) robot costs (\d+) (\w+)[.|\s](?:and (\d+) (\w+))?").unwrap();
@@ -28,16 +31,16 @@ fn parse_input(input: &str) -> Vec<Blueprint> {
         let mut blueprint: Blueprint = HashMap::new();
         re.captures_iter(&line).for_each(|c| {
             let robot = c.get(1).unwrap().as_str();
-            let mut price: HashMap<Currency, u64> = HashMap::new();
+            let mut price: HashMap<Mineral, u64> = HashMap::new();
             c.iter().skip(2).tuples().for_each(|(v1, v2)| {
                 if let Some(q) = v1 {
                     let quantity = q.as_str().parse::<u64>().unwrap();
 
                     if let Some(n) = v2 {
                         match n.as_str() {
-                            "ore" => price.insert(Currency::Ore, quantity),
-                            "clay" => price.insert(Currency::Clay, quantity),
-                            "obsidian" => price.insert(Currency::Obsidian, quantity),
+                            "ore" => price.insert(Mineral::Ore, quantity),
+                            "clay" => price.insert(Mineral::Clay, quantity),
+                            "obsidian" => price.insert(Mineral::Obsidian, quantity),
                             _ => unreachable!(),
                         };
                     } else {
@@ -49,10 +52,10 @@ fn parse_input(input: &str) -> Vec<Blueprint> {
             });
 
             let robot = match robot {
-                "ore" => Robot::Ore(Currency::Ore),
-                "clay" => Robot::Clay(Currency::Clay),
-                "obsidian" => Robot::Obsidian(Currency::Obsidian),
-                "geode" => Robot::Geode(Currency::Geode),
+                "ore" => Robot::Ore(Mineral::Ore),
+                "clay" => Robot::Clay(Mineral::Clay),
+                "obsidian" => Robot::Obsidian(Mineral::Obsidian),
+                "geode" => Robot::Geode(Mineral::Geode),
                 _ => unreachable!(),
             };
             blueprint.insert(robot, price);
@@ -62,163 +65,192 @@ fn parse_input(input: &str) -> Vec<Blueprint> {
     blueprints
 }
 
-fn need_more(time_left: u64, current_stock: u64, current_robots: u64, max: u64) -> bool {
-    !(current_robots >= max || time_left * current_robots + current_stock > time_left * max)
+fn need_more(time_left: u64, current_stock: u64, current_production: u64, max: u64) -> bool {
+    !(current_production >= max || time_left * current_production + current_stock > time_left * max)
 }
 
 fn part1(blueprints: &Vec<Blueprint>) -> usize {
     println!("robots: {:?}", blueprints);
 
-    let mut time = 24;
+    const STARTING_TIME: u64 = 24;
+    let mut to_check: VecDeque<(Pack, Pack, Stock, u64)> = VecDeque::new();
 
     // we start with 1 Ore robot in our pack
-    let mut pack: HashMap<Robot, u64> = HashMap::from_iter([
-        (Robot::Ore(Currency::Ore), 1),
-        (Robot::Clay(Currency::Clay), 0),
-        (Robot::Obsidian(Currency::Obsidian), 0),
-        (Robot::Geode(Currency::Geode), 0),
+    let starting_pack: Pack = HashMap::from_iter([
+        (Robot::Ore(Mineral::Ore), 1),
+        (Robot::Clay(Mineral::Clay), 0),
+        (Robot::Obsidian(Mineral::Obsidian), 0),
+        (Robot::Geode(Mineral::Geode), 0),
     ]);
-    let mut pending: HashMap<Robot, u64> = HashMap::from_iter([
-        (Robot::Ore(Currency::Ore), 0),
-        (Robot::Clay(Currency::Clay), 0),
-        (Robot::Obsidian(Currency::Obsidian), 0),
-        (Robot::Geode(Currency::Geode), 0),
+    let starting_pending: HashMap<Robot, u64> = HashMap::from_iter([
+        (Robot::Ore(Mineral::Ore), 0),
+        (Robot::Clay(Mineral::Clay), 0),
+        (Robot::Obsidian(Mineral::Obsidian), 0),
+        (Robot::Geode(Mineral::Geode), 0),
     ]);
-    // and no money ... yet !
-    let mut money: HashMap<Currency, u64> = HashMap::from_iter([
-        (Currency::Ore, 0),
-        (Currency::Clay, 0),
-        (Currency::Obsidian, 0),
-        (Currency::Geode, 0),
+    // and no mineral ... yet !
+    let starting_minerals: Stock = HashMap::from_iter([
+        (Mineral::Ore, 0),
+        (Mineral::Clay, 0),
+        (Mineral::Obsidian, 0),
+        (Mineral::Geode, 0),
     ]);
+
+    // add starting state
+    to_check.push_back((
+        starting_pack,
+        starting_pending,
+        starting_minerals,
+        STARTING_TIME,
+    ));
 
     let blueprint = &blueprints[0];
 
     // The robot factory can only produce 1 robot per turn,
-    // so no need to produce more currency than the max that can
+    // so no need to produce more minerals than the max that can
     // be used.
-    let mut max_needed_currency = HashMap::new();
-    blueprint.values().for_each(|price| {
-        price.into_iter().for_each(|(currency, &quantity)| {
-            let state_currency_max = max_needed_currency.entry(*currency).or_insert(quantity);
-            if price[currency] > *state_currency_max {
-                *max_needed_currency.get_mut(currency).unwrap() = price[currency];
+    let mut max_needed_minerals = HashMap::new();
+    blueprint.values().for_each(|cost| {
+        cost.into_iter().for_each(|(mineral, &quantity)| {
+            let state_minerals_max = max_needed_minerals.entry(*mineral).or_insert(quantity);
+            if cost[mineral] > *state_minerals_max {
+                *max_needed_minerals.get_mut(mineral).unwrap() = cost[mineral];
             };
         });
     });
 
-    while time > 0 {
-        // how many of each currency are we producing per turn ?
+    let mut best_geodes = 0;
+    while let Some((pack, pending, minerals, time)) = to_check.pop_front() {
+        if time == 0 {
+            continue;
+        };
+        best_geodes = best_geodes.max(minerals[&Mineral::Geode]);
 
-        // let mut currency_produced: HashMap<Currency, u64> = HashMap::new();
-        // pack.iter().for_each(|(robot, quantity)| {
-        //     match robot {
-        //         Robot::Ore(c) => {
-        //             currency_produced.insert(*c, *quantity);
-        //         }
-        //         Robot::Clay(c) => {
-        //             currency_produced.insert(*c, *quantity);
-        //         }
-        //         Robot::Obsidian(c) => {
-        //             currency_produced.insert(*c, *quantity);
-        //         }
-        //         _ => (),
-        //     };
-        // });
+        // stop if this path lead to less geode at the same time
+        // -1 is because we also update the best geodes at the end of the round so we want to
+        // compare at starting time.
+        if minerals[&Mineral::Geode] < best_geodes.max(1) - 1
+            || to_check.contains(&(pack.clone(), pending.clone(), minerals.clone(), time))
+        {
+            continue;
+        };
 
-        // println!("PER ROUND: {:?}", currency_produced);
-
-        // can we create new robots, in the order of importance ?
+        // Each turn we can do 5 actions.
+        // Creating one type of robot or do nothing.
+        // By order or importance
         [
-            Robot::Geode(Currency::Geode),
-            Robot::Obsidian(Currency::Obsidian),
-            Robot::Clay(Currency::Clay),
-            Robot::Ore(Currency::Ore),
+            Some(Robot::Geode(Mineral::Geode)),
+            Some(Robot::Obsidian(Mineral::Obsidian)),
+            Some(Robot::Clay(Mineral::Clay)),
+            Some(Robot::Ore(Mineral::Ore)),
+            None,
         ]
         .iter()
         .for_each(|robot| {
-            let need_more = match robot {
-                Robot::Geode(_) => true,
-                Robot::Obsidian(c) => {
-                    need_more(time, money[c], pack[robot], max_needed_currency[c])
-                }
-                Robot::Clay(c) => {
-                    // we wanrt at least 2 ore robots
-                    pack[&Robot::Ore(Currency::Ore)] >= 2
-                        && need_more(time, money[c], pack[robot], max_needed_currency[c])
-                }
-                Robot::Ore(c) => need_more(time, money[c], pack[robot], max_needed_currency[c]),
-            };
-            // let need_more = match robot {
-            //     Robot::Geode => true,
-            //     Robot::Obsidian(c) => currency_produced[c] < max_needed_currency[c],
-            //     Robot::Clay(c) => currency_produced[c] < max_needed_currency[c],
-            //     Robot::Ore(c) => currency_produced[c] < max_needed_currency[c],
-            // };
+            if let Some(robot) = robot {
+                let need_more = match robot {
+                    Robot::Geode(_) => true,
+                    Robot::Obsidian(c) => {
+                        need_more(time, minerals[c], pack[robot], max_needed_minerals[c])
+                    }
+                    Robot::Clay(c) => {
+                        need_more(time, minerals[c], pack[robot], max_needed_minerals[c])
+                    }
+                    Robot::Ore(c) => {
+                        need_more(time, minerals[c], pack[robot], max_needed_minerals[c])
+                    }
+                };
 
-            // if let Some(c) = match robot {
-            //     Robot::Geode => None,
-            //     Robot::Obsidian(c) => Some(c),
-            //     Robot::Clay(c) => Some(c),
-            //     Robot::Ore(c) => Some(c),
-            // } {
-            //     println!(
-            //         "   {} >> {:?} ({}) {} ({}) {}",
-            //         time,
-            //         robot,
-            //         pack[robot],
-            //         need_more,
-            //         money[c],
-            //         !(pack[robot] >= max_needed_currency[c]
-            //             || time * pack[robot] + money[c] > time * max_needed_currency[c])
-            //     );
-            // };
+                // If we can produce a robot, produce it
+                let new_state = if need_more {
+                    // check if we can create it
+                    let cost = &blueprint[robot];
+                    let can_create = cost
+                        .iter()
+                        .all(|(mineral, quantity)| minerals[mineral] >= *quantity);
 
-            // !(current_robots >= max || time_left * current_robots + current_stock > time_left * max)
-            if need_more {
-                // check if we can create it
-                let price = &blueprint[robot];
-                let can_create = price
-                    .iter()
-                    .all(|(currency, quantity)| money[currency] >= *quantity);
-                if can_create {
-                    println!("-- creating a {:?}", robot);
-                    *pending.get_mut(robot).unwrap() += 1;
-                    // pay the price
-                    price.iter().for_each(|(currency, quantity)| {
-                        *money.get_mut(currency).unwrap() -= quantity;
-                    });
+                    if can_create {
+                        let (mut pending, mut minerals) = (pending.clone(), minerals.clone());
+                        *pending.get_mut(robot).unwrap() += 1;
+                        // pay the price
+                        cost.iter().for_each(|(mineral, quantity)| {
+                            *minerals.get_mut(mineral).unwrap() -= quantity;
+                        });
+                        Some((pack.clone(), pending, minerals, time))
+                    } else {
+                        None
+                    }
+                } else {
+                    None
+                };
+
+                match new_state {
+                    Some((mut pack, mut pending, mut minerals, time)) => {
+                        // add production of this round to mineral stock
+                        pack.iter().for_each(|(robot, quantity)| {
+                            let mineral = match robot {
+                                Robot::Ore(c) => c,
+                                Robot::Clay(c) => c,
+                                Robot::Obsidian(c) => c,
+                                Robot::Geode(c) => c,
+                            };
+                            *minerals.get_mut(mineral).unwrap() += *quantity;
+                        });
+
+                        best_geodes = best_geodes.max(minerals[&Mineral::Geode]);
+
+                        // add pending robot to pack
+                        pending.clone().into_iter().for_each(|(robot, quantity)| {
+                            *pack.get_mut(&robot).unwrap() += quantity;
+                            *pending.get_mut(&robot).unwrap() = 0;
+                        });
+
+                        println!(
+                            "Pack: {:?}, Minerals: {:?}, ({}) -- {}",
+                            pack, minerals, time, best_geodes
+                        );
+                        to_check.push_back((pack, pending, minerals, time - 1));
+                    }
+                    None => (),
                 }
+            } else {
+                // We don't do anything in this round except producing minerals.
+                let (mut pack, mut pending, mut minerals, time) =
+                    (pack.clone(), pending.clone(), minerals.clone(), time);
+
+                // add production of this round to mineral stock
+                pack.iter().for_each(|(robot, quantity)| {
+                    let mineral = match robot {
+                        Robot::Ore(c) => c,
+                        Robot::Clay(c) => c,
+                        Robot::Obsidian(c) => c,
+                        Robot::Geode(c) => c,
+                    };
+                    *minerals.get_mut(mineral).unwrap() += *quantity;
+                });
+
+                best_geodes = best_geodes.max(minerals[&Mineral::Geode]);
+
+                // add pending robot to pack
+                pending.clone().into_iter().for_each(|(robot, quantity)| {
+                    *pack.get_mut(&robot).unwrap() += quantity;
+                    *pending.get_mut(&robot).unwrap() = 0;
+                });
+
+                println!(
+                    "Pack: {:?}, Minerals: {:?}, ({}) -- {}",
+                    pack, minerals, time, best_geodes
+                );
+                to_check.push_back((pack, pending, minerals, time - 1));
             }
+            // println!("Queue length: {}", to_check.len());
         });
-
-        let in_pack = pack
-            .iter()
-            .filter(|(_robot, quantity)| quantity > &&0)
-            .collect::<Vec<(&Robot, &u64)>>();
-
-        // add production of this round to money pot
-        in_pack.iter().for_each(|(robot, quantity)| {
-            let currency = match robot {
-                Robot::Ore(c) => c,
-                Robot::Clay(c) => c,
-                Robot::Obsidian(c) => c,
-                Robot::Geode(c) => c,
-            };
-            *money.get_mut(currency).unwrap() += **quantity;
-        });
-
-        // add pending robot to pack
-        pending.clone().into_iter().for_each(|(robot, quantity)| {
-            *pack.get_mut(&robot).unwrap() += quantity;
-            *pending.get_mut(&robot).unwrap() = 0;
-        });
-
-        time -= 1;
     }
-    println!("MONEY: {:?}", money);
-    println!("PACK: {:?}", pack);
-    println!("MAX NEEDED: {:?}", max_needed_currency);
+
+    println!("Geodes: {}", best_geodes);
+    // println!("MINERALS: {:?}", minerals);
+    // println!("PACK: {:?}", pack);
+    // println!("MAX NEEDED: {:?}", max_needed_minerals);
     0
 }
 
