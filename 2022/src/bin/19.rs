@@ -21,25 +21,25 @@ enum Robot {
     Geode(Mineral),
 }
 
-type Blueprint = HashMap<Robot, HashMap<Mineral, u64>>;
-type Pack = HashMap<Robot, u64>;
-type Stock = HashMap<Mineral, u64>;
+type Blueprint = HashMap<Robot, HashMap<Mineral, u16>>;
+type Pack = HashMap<Robot, u16>;
+type Stock = HashMap<Mineral, u16>;
 
-fn parse_input(input: &str) -> Vec<(u64, Blueprint)> {
+fn parse_input(input: &str) -> Vec<(u16, Blueprint)> {
     let re = Regex::new(r"Each (\w+) robot costs (\d+) (\w+)[.|\s](?:and (\d+) (\w+))?").unwrap();
-    let mut blueprints: Vec<(u64, Blueprint)> = vec![];
+    let mut blueprints: Vec<(u16, Blueprint)> = vec![];
     input.lines().for_each(|line| {
         let mut blueprint: Blueprint = HashMap::new();
         let (id_part, _) = line.split_once(": ").unwrap();
         let (_, id) = id_part.split_once(" ").unwrap();
-        let id = id.parse::<u64>().unwrap();
+        let id = id.parse::<u16>().unwrap();
 
         re.captures_iter(&line).for_each(|c| {
             let robot = c.get(1).unwrap().as_str();
-            let mut price: HashMap<Mineral, u64> = HashMap::new();
+            let mut price: HashMap<Mineral, u16> = HashMap::new();
             c.iter().skip(2).tuples().for_each(|(v1, v2)| {
                 if let Some(q) = v1 {
-                    let quantity = q.as_str().parse::<u64>().unwrap();
+                    let quantity = q.as_str().parse::<u16>().unwrap();
 
                     if let Some(n) = v2 {
                         match n.as_str() {
@@ -70,12 +70,12 @@ fn parse_input(input: &str) -> Vec<(u64, Blueprint)> {
     blueprints
 }
 
-fn need_more(time_left: u64, current_stock: u64, current_production: u64, max: u64) -> bool {
+fn need_more(time_left: u16, current_stock: u16, current_production: u16, max: u16) -> bool {
     !(current_production >= max || time_left * current_production + current_stock > time_left * max)
 }
 
-fn get_best_geode_for(blueprint: &Blueprint, time: u64) -> u64 {
-    let mut to_check: VecDeque<(Pack, Pack, Stock, u64)> = VecDeque::new();
+fn get_best_geode_for(blueprint: &Blueprint, time: u16) -> u16 {
+    let mut to_check: VecDeque<(Pack, Pack, Stock, u16)> = VecDeque::new();
 
     // we start with 1 Ore robot in our pack
     let starting_pack: Pack = HashMap::from_iter([
@@ -84,7 +84,7 @@ fn get_best_geode_for(blueprint: &Blueprint, time: u64) -> u64 {
         (Robot::Obsidian(Mineral::Obsidian), 0),
         (Robot::Geode(Mineral::Geode), 0),
     ]);
-    let starting_pending: HashMap<Robot, u64> = HashMap::from_iter([
+    let starting_pending: HashMap<Robot, u16> = HashMap::from_iter([
         (Robot::Ore(Mineral::Ore), 0),
         (Robot::Clay(Mineral::Clay), 0),
         (Robot::Obsidian(Mineral::Obsidian), 0),
@@ -122,11 +122,18 @@ fn get_best_geode_for(blueprint: &Blueprint, time: u64) -> u64 {
         // Continue only if it is potentially a path equally performing than the current best state
         // or if a similar state is not already present in the paths to continue.
         // Because we compare before the production of the turn, we check the best minus 1.
-        if minerals[&Mineral::Geode] < best_geodes.max(1) - 1
+        if minerals[&Mineral::Geode]
+            + pack[&Robot::Geode(Mineral::Geode)] * 2 * (24 - 1 - (24 - time))
+            < best_geodes
             || to_check.contains(&(pack.clone(), pending.clone(), minerals.clone(), time))
         {
             continue;
         }
+        // if minerals[&Mineral::Geode] < best_geodes.max(1) - 1
+        //     || to_check.contains(&(pack.clone(), pending.clone(), minerals.clone(), time))
+        // {
+        //     continue;
+        // }
 
         // Each turn we can do 5 actions.
         // Creating one type of robot or do nothing.
@@ -255,27 +262,38 @@ fn get_best_geode_for(blueprint: &Blueprint, time: u64) -> u64 {
     best_geodes
 }
 
-fn part1(blueprints: &Vec<(u64, Blueprint)>) -> u64 {
-    const STARTING_TIME: u64 = 24;
+fn part1(blueprints: &Vec<(u16, Blueprint)>) -> u16 {
+    const STARTING_TIME: u16 = 24;
     blueprints
         .par_iter()
         .map(|(id, blueprint)| {
             let geodes = get_best_geode_for(blueprint, STARTING_TIME);
-            println!(">> {}", geodes * id);
+            println!("{} >> {}", id, geodes * id);
             geodes * id
         })
         .sum()
 }
 
-// fn part2(blueprints: &Vec<Robot>) -> usize {
-//     0
-// }
+fn part2(blueprints: &Vec<(u16, Blueprint)>) -> u16 {
+    const STARTING_TIME: u16 = 32;
+    blueprints
+        .par_iter()
+        .take(3)
+        .map(|(id, blueprint)| {
+            let geodes = get_best_geode_for(blueprint, STARTING_TIME);
+            println!("{} >> {}", id, geodes * id);
+            geodes * id
+        })
+        .product()
+}
 
 #[aoc::main()]
-fn main(input: &str) -> (u64, u64) {
+fn main(input: &str) -> (u16, u16) {
     let blueprints = parse_input(input);
-    let p1 = part1(&blueprints);
-    // let p2 = part2(&blueprints);
-    // (p1, p2)
-    (p1, 0)
+    // let p1 = part1(&blueprints);
+    let p1 = 0;
+    let p2 = part2(&blueprints);
+    (p1, p2)
 }
+
+//3080
