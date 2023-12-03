@@ -113,10 +113,7 @@ fn parse_board(input: &str) -> (usize, usize) {
             .into_iter()
             .map(|(_pos, v)| v.into_iter().unique().collect::<Vec<Num>>())
             .filter(|v| v.iter().len() == 2)
-            .map(|v| {
-                // println!("{:?}", v);
-                v.iter().map(|n| n.value).product::<usize>()
-            })
+            .map(|v| v.iter().map(|n| n.value).product::<usize>())
             .sum(),
     )
 }
