@@ -7,11 +7,14 @@ struct Num {
     is_valid: bool,
 }
 
-// fn has_adjacent_symbol(x: usize, y: usize, board: &HashMap<(usize, usize), char>) -> bool {}
-fn has_adjacent_symbol(x: isize, y: isize, board: &Vec<Vec<char>>) -> bool {
+fn has_adjacent_symbol_and_adjacent_stars(
+    x: isize,
+    y: isize,
+    board: &Vec<Vec<char>>,
+) -> (bool, Vec<(isize, isize)>) {
     let (len_y, len_x) = (board.len() as isize, board[0].len() as isize);
 
-    vec![
+    let neigbors = vec![
         (x - 1, y),
         (x + 1, y),
         (x - 1, y - 1),
@@ -20,39 +23,30 @@ fn has_adjacent_symbol(x: isize, y: isize, board: &Vec<Vec<char>>) -> bool {
         (x + 1, y + 1),
         (x, y - 1),
         (x, y + 1),
-    ]
-    .into_iter()
-    .filter(|(x, y)| x >= &(0 as isize) && x < &len_x && y >= &(0 as isize) && y < &len_y)
-    .map(|(x, y)| {
-        let neighbor = board[y as usize][x as usize];
-        !neighbor.is_digit(10) && neighbor != '.'
-    })
-    .any(|b| b)
-}
+    ];
 
-fn adjacent_stars_symbol(x: isize, y: isize, board: &Vec<Vec<char>>) -> Vec<(isize, isize)> {
-    let (len_y, len_x) = (board.len() as isize, board[0].len() as isize);
-
-    vec![
-        (x - 1, y),
-        (x + 1, y),
-        (x - 1, y - 1),
-        (x - 1, y + 1),
-        (x + 1, y - 1),
-        (x + 1, y + 1),
-        (x, y - 1),
-        (x, y + 1),
-    ]
-    .into_iter()
-    .filter(|(x, y)| x >= &(0 as isize) && x < &len_x && y >= &(0 as isize) && y < &len_y)
-    .filter_map(|(x, y)| {
-        let neighbor = board[y as usize][x as usize];
-        match neighbor == '*' {
-            true => Some((x, y)),
-            false => None,
-        }
-    })
-    .collect()
+    (
+        neigbors
+            .clone()
+            .into_iter()
+            .filter(|(x, y)| x >= &(0 as isize) && x < &len_x && y >= &(0 as isize) && y < &len_y)
+            .map(|(x, y)| {
+                let neighbor = board[y as usize][x as usize];
+                !neighbor.is_digit(10) && neighbor != '.'
+            })
+            .any(|b| b),
+        neigbors
+            .into_iter()
+            .filter(|(x, y)| x >= &(0 as isize) && x < &len_x && y >= &(0 as isize) && y < &len_y)
+            .filter_map(|(x, y)| {
+                let neighbor = board[y as usize][x as usize];
+                match neighbor == '*' {
+                    true => Some((x, y)),
+                    false => None,
+                }
+            })
+            .collect(),
+    )
 }
 
 fn parse_board(input: &str) -> (usize, usize) {
@@ -78,11 +72,11 @@ fn parse_board(input: &str) -> (usize, usize) {
                     let value = String::from_iter(&val).parse::<usize>().unwrap();
                     let is_valid = pos
                         .iter()
-                        .map(|(x, y)| has_adjacent_symbol(*x, *y, &board))
+                        .map(|(x, y)| has_adjacent_symbol_and_adjacent_stars(*x, *y, &board).0)
                         .any(|b| b);
                     numbers.push(Num { value, is_valid });
                     pos.iter().for_each(|(x, y)| {
-                        let stars = adjacent_stars_symbol(*x, *y, &board);
+                        let stars = has_adjacent_symbol_and_adjacent_stars(*x, *y, &board).1;
                         for star in stars {
                             let s = star_symbols.entry(star).or_insert(vec![]);
                             s.push(Num { value, is_valid });
@@ -96,11 +90,11 @@ fn parse_board(input: &str) -> (usize, usize) {
                     let value = String::from_iter(&val).parse::<usize>().unwrap();
                     let is_valid = pos
                         .iter()
-                        .map(|(x, y)| has_adjacent_symbol(*x, *y, &board))
+                        .map(|(x, y)| has_adjacent_symbol_and_adjacent_stars(*x, *y, &board).0)
                         .any(|b| b);
                     numbers.push(Num { value, is_valid });
                     pos.iter().for_each(|(x, y)| {
-                        let stars = adjacent_stars_symbol(*x, *y, &board);
+                        let stars = has_adjacent_symbol_and_adjacent_stars(*x, *y, &board).1;
                         for star in stars {
                             let s = star_symbols.entry(star).or_insert(vec![]);
                             s.push(Num { value, is_valid });
