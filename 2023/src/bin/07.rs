@@ -9,10 +9,10 @@ struct Hand {
 }
 
 impl Hand {
-    fn from_str(line: &str, part: u8) -> Self {
+    fn from_str(line: &str, p2: bool) -> Self {
         let (cards, bid) = line.split_once(" ").unwrap();
         let cards = cards.chars().enumerate().fold([0; 5], |mut acc, (i, c)| {
-            acc[i] = to_digit(c, part);
+            acc[i] = to_digit(c, p2);
             acc
         });
         let bid = bid.parse::<usize>().ok().unwrap();
@@ -93,13 +93,16 @@ impl Ord for Hand {
         let other_max = other_groups.iter().map(|(_k, v)| v.len()).max().unwrap();
 
         match (self_max, other_max) {
+            // 5 of a kind
             (5, 5) => self.compare_cards(&other),
             (5, _) => Ordering::Greater,
             (_, 5) => Ordering::Less,
+            // 4 of a kind
             (4, 4) => self.compare_cards(&other),
             (4, _) => Ordering::Greater,
             (_, 4) => Ordering::Less,
             (_, _) => {
+                // full (3, 2)
                 let self_full = self_groups.len() == 2;
                 let other_full = other_groups.len() == 2;
                 match (self_full, other_full) {
@@ -135,16 +138,16 @@ impl PartialOrd for Hand {
     }
 }
 
-fn to_digit(card: char, part: u8) -> usize {
+fn to_digit(card: char, p2: bool) -> usize {
     match card {
         'A' => 14,
         'K' => 13,
         'Q' => 12,
         'J' => {
-            if part == 1 {
-                11
-            } else {
+            if p2 {
                 0
+            } else {
+                11
             }
         }
         'T' => 10,
@@ -152,14 +155,14 @@ fn to_digit(card: char, part: u8) -> usize {
     }
 }
 
-fn parse_input(input: &str, part: u8) -> Vec<Hand> {
-    input.split("\n").map(|h| Hand::from_str(h, part)).collect()
+fn parse_input(input: &str, p2: bool) -> Vec<Hand> {
+    input.split("\n").map(|h| Hand::from_str(h, p2)).collect()
 }
 
 #[aoc::main()]
 fn main(input: &str) -> (usize, usize) {
-    let hands_p1 = parse_input(input, 1);
-    let hands_p2 = parse_input(input, 2)
+    let hands_p1 = parse_input(input, false);
+    let hands_p2 = parse_input(input, true)
         .into_iter()
         .map(|h| h.jokerize())
         .collect::<Vec<Hand>>();
