@@ -64,6 +64,7 @@ fn part2(ins: &Vec<char>, m: &HashMap<&str, (&str, &str)>) -> usize {
     cycles.iter().fold(1, |acc, n| lcm(acc, *n))
 }
 
+// lcm and gcd functions taken from https://www.hackertouch.com/least-common-multiple-in-rust.html
 fn lcm(first: usize, second: usize) -> usize {
     first * second / gcd(first, second)
 }
