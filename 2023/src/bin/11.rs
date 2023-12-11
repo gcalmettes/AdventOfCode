@@ -14,7 +14,7 @@ fn parse_grid(input: &str) -> HashSet<(usize, usize)> {
         .collect::<HashSet<(usize, usize)>>()
 }
 
-fn part(galaxies: &HashSet<(usize, usize)>, expansion: usize) -> usize {
+fn parts(galaxies: &HashSet<(usize, usize)>) -> (usize, usize) {
     let (cols, rows) = galaxies
         .iter()
         .fold((HashSet::new(), HashSet::new()), |mut acc, g| {
@@ -33,28 +33,25 @@ fn part(galaxies: &HashSet<(usize, usize)>, expansion: usize) -> usize {
     galaxies
         .iter()
         .tuple_combinations()
-        .map(|(g1, g2)| {
+        .fold((0, 0), |acc, (g1, g2)| {
             let (min_c, max_c) = (min(g1.0, g2.0), max(g1.0, g2.0));
             let (min_r, max_r) = (min(g1.1, g2.1), max(g1.1, g2.1));
             let empty_c_in_between = empty_cols
-                .intersection(&HashSet::from_iter(min_c..=max_c))
+                .intersection(&HashSet::from_iter(min_c..max_c))
                 .count();
             let empty_r_in_between = empty_rows
-                .intersection(&HashSet::from_iter(min_r..=max_r))
+                .intersection(&HashSet::from_iter(min_r..max_r))
                 .count();
-            let steps = (max_r - min_r)
-                + (max_c - min_c)
-                + empty_r_in_between * (expansion - 1)
-                + empty_c_in_between * (expansion - 1);
-            steps
+            let steps = (max_r - min_r) + (max_c - min_c);
+            let empty = empty_r_in_between + empty_c_in_between;
+
+            (acc.0 + steps + empty, acc.1 + steps + empty * (1000000 - 1))
         })
-        .sum()
 }
 
 #[aoc::main()]
 fn main(input: &str) -> (usize, usize) {
     let galaxies = parse_grid(input);
-    let p1 = part(&galaxies, 2);
-    let p2 = part(&galaxies, 1000000);
+    let (p1, p2) = parts(&galaxies);
     (p1, p2)
 }
