@@ -17,7 +17,6 @@ fn parse_grid(input: &str) -> HashSet<(usize, usize)> {
 fn part(galaxies: &HashSet<(usize, usize)>, expansion: usize) -> usize {
     let (cols, rows) = galaxies
         .iter()
-        // .fold((0, 0), |acc, g| (max(acc.0, g.0), max(acc.1, g.1)));
         .fold((HashSet::new(), HashSet::new()), |mut acc, g| {
             acc.0.insert(g.0);
             acc.1.insert(g.1);
@@ -33,10 +32,8 @@ fn part(galaxies: &HashSet<(usize, usize)>, expansion: usize) -> usize {
 
     galaxies
         .iter()
-        .combinations(2)
-        .map(|g| {
-            let g1 = g[0];
-            let g2 = g[1];
+        .tuple_combinations()
+        .map(|(g1, g2)| {
             let (min_c, max_c) = (min(g1.0, g2.0), max(g1.0, g2.0));
             let (min_r, max_r) = (min(g1.1, g2.1), max(g1.1, g2.1));
             let empty_c_in_between = empty_cols
