@@ -1,3 +1,4 @@
+use itertools::Itertools;
 use std::collections::{HashMap, VecDeque};
 
 #[derive(Debug, PartialEq)]
@@ -45,6 +46,32 @@ fn parse_modules(input: &str) -> (Vec<&str>, HashMap<&str, (ModuleType, Vec<&str
             (broadcast_targets, modules)
         },
     )
+}
+
+fn generate_dot(broadcast_targets: &Vec<&str>, modules: &HashMap<&str, (ModuleType, Vec<&str>)>) {
+    let mut dot = String::from("digraph G {\n");
+    dot += &format!("  button -> brodcaster;\n");
+    for t in broadcast_targets.iter().sorted() {
+        dot += &format!("  brodcaster -> {};\n", t);
+    }
+    for (name, (mod_type, destinations)) in modules {
+        for dst in destinations.iter().sorted() {
+            dot += &format!(
+                "  {} -> {}{};\n",
+                name,
+                dst,
+                if mod_type == &ModuleType::Conjunction {
+                    " [style=dotted]"
+                } else {
+                    ""
+                }
+            );
+        }
+    }
+    dot += "}";
+    // Run the following to visualize the graph:
+    //   dot -Tsvg img/20.dot > img/20.svg
+    std::fs::write("img/20.dot", dot).unwrap();
 }
 
 fn simulate(targets: &Vec<&str>, modules: &HashMap<&str, (ModuleType, Vec<&str>)>) -> usize {
@@ -134,6 +161,7 @@ fn simulate(targets: &Vec<&str>, modules: &HashMap<&str, (ModuleType, Vec<&str>)
 fn main(input: &str) -> (usize, usize) {
     let (broadcast_targets, modules) = parse_modules(input);
     let p1 = simulate(&broadcast_targets, &modules);
+    generate_dot(&broadcast_targets, &modules);
     let p2 = 0;
     (p1, p2)
 }
