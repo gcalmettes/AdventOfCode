@@ -1,5 +1,7 @@
 use itertools::Itertools;
+use z3::ast::{Ast, Int, Real};
 
+#[derive(Clone, Copy)]
 struct Hailstone {
     x: f64,
     y: f64,
@@ -62,6 +64,31 @@ fn find_intersections(hailstones: &[Hailstone], start: f64, end: f64) -> usize {
     intersections
 }
 
+fn solve_p2(hailstones: &[Hailstone]) -> usize {
+    let ctx = z3::Context::new(&z3::Config::new());
+    let s = z3::Solver::new(&ctx);
+    let [fx, fy, fz, fdx, fdy, fdz] =
+        ["fx", "fy", "fz", "fdx", "fdy", "fdz"].map(|v| Real::new_const(&ctx, v));
+
+    let zero = Int::from_i64(&ctx, 0).to_real();
+    for (i, &h) in hailstones.iter().enumerate() {
+        let [x, y, z, dx, dy, dz] =
+            [h.x, h.y, h.z, h.dx, h.dy, h.dz].map(|v| Int::from_i64(&ctx, v as _).to_real());
+        let t = Real::new_const(&ctx, format!("t{i}"));
+        s.assert(&t.ge(&zero));
+        s.assert(&((&x + &dx * &t)._eq(&(&fx + &fdx * &t))));
+        s.assert(&((&y + &dy * &t)._eq(&(&fy + &fdy * &t))));
+        s.assert(&((&z + &dz * &t)._eq(&(&fz + &fdz * &t))));
+    }
+    assert_eq!(s.check(), z3::SatResult::Sat);
+    let res = s
+        .get_model()
+        .unwrap()
+        .eval(&(&fx + &fy + &fz), true)
+        .unwrap();
+    res.to_string().strip_suffix(".0").unwrap().parse().unwrap()
+}
+
 #[aoc::main()]
 fn main(input: &str) -> (usize, usize) {
     let hailstones = input
@@ -69,5 +96,6 @@ fn main(input: &str) -> (usize, usize) {
         .map(|line| Hailstone::from_str(line))
         .collect::<Vec<Hailstone>>();
     let p1 = find_intersections(&hailstones, 200000000000000.0, 400000000000000.0);
-    (p1, 0)
+    let p2 = solve_p2(&hailstones);
+    (p1, p2)
 }
