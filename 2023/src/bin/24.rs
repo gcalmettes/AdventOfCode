@@ -64,9 +64,11 @@ fn find_intersections(hailstones: &[Hailstone], start: f64, end: f64) -> usize {
     intersections
 }
 
+// https://siedentop.dev/posts/rust-z3/
 fn solve_p2(hailstones: &[Hailstone]) -> usize {
     let ctx = z3::Context::new(&z3::Config::new());
     let s = z3::Solver::new(&ctx);
+    // our rock
     let [fx, fy, fz, fdx, fdy, fdz] =
         ["fx", "fy", "fz", "fdx", "fdy", "fdz"].map(|v| Real::new_const(&ctx, v));
 
@@ -75,9 +77,13 @@ fn solve_p2(hailstones: &[Hailstone]) -> usize {
         let [x, y, z, dx, dy, dz] =
             [h.x, h.y, h.z, h.dx, h.dy, h.dz].map(|v| Int::from_i64(&ctx, v as _).to_real());
         let t = Real::new_const(&ctx, format!("t{i}"));
+        // make sure we threw the rock
         s.assert(&t.ge(&zero));
+        // collide in x position
         s.assert(&((&x + &dx * &t)._eq(&(&fx + &fdx * &t))));
+        // collide in y position
         s.assert(&((&y + &dy * &t)._eq(&(&fy + &fdy * &t))));
+        // collide in z position
         s.assert(&((&z + &dz * &t)._eq(&(&fz + &fdz * &t))));
     }
     assert_eq!(s.check(), z3::SatResult::Sat);
