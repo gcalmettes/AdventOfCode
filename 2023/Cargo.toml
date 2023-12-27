@@ -19,3 +19,4 @@ quote = "1.0.33"
 syn = { version = "2.0.39", features = ["full"] }
 pathfinding = "4.6.0"
 hashbrown = "0.14.3"
+num = "0.4.1"
