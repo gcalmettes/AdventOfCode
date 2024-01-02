@@ -34,25 +34,39 @@ fn display(tiles: &HashSet<Pos>, rocks: &HashSet<Pos>) {
     }
 }
 
-fn parse_input(input: &str) -> (Pos, HashSet<Pos>) {
+fn save_steps(start: &Pos, step: usize, rocks: &HashSet<Pos>, shape: (isize, isize)) {
+    let mut csv = String::from("");
+    for i in (0..=1000).step_by(2) {
+        println!("{i}");
+        let res = walk(&start, i, &rocks, shape);
+        csv += &format!("{i},{res}\n");
+    }
+    std::fs::write("img/21.csv", csv).unwrap();
+}
+
+fn parse_input(input: &str) -> (Pos, HashSet<Pos>, (isize, isize)) {
     input.lines().enumerate().fold(
-        (Pos(0, 0), HashSet::new()),
-        |(mut start, mut pos), (r, line)| {
-            line.chars().enumerate().for_each(|(c, ch)| match ch {
-                '#' => {
-                    pos.insert(Pos(c as isize, r as isize));
+        (Pos(0, 0), HashSet::new(), (0, 0)),
+        |(mut start, mut pos, (mut cmax, mut rmax)), (r, line)| {
+            line.chars().enumerate().for_each(|(c, ch)| {
+                cmax = cmax.max((c + 1) as isize);
+                rmax = rmax.max((r + 1) as isize);
+                match ch {
+                    '#' => {
+                        pos.insert(Pos(c as isize, r as isize));
+                    }
+                    'S' => {
+                        start = Pos(c as isize, r as isize);
+                    }
+                    _ => {}
                 }
-                'S' => {
-                    start = Pos(c as isize, r as isize);
-                }
-                _ => {}
             });
-            (start, pos)
+            (start, pos, (cmax, rmax))
         },
     )
 }
 
-fn walk(start: &Pos, step: usize, rocks: &HashSet<Pos>) -> usize {
+fn walk(start: &Pos, step: usize, rocks: &HashSet<Pos>, shape: (isize, isize)) -> usize {
     let mut queue = VecDeque::from_iter([(0, start.clone())]);
     let mut seen = HashSet::<Pos>::new();
     let mut tiles = HashSet::<Pos>::new();
@@ -61,7 +75,7 @@ fn walk(start: &Pos, step: usize, rocks: &HashSet<Pos>) -> usize {
         if i > step {
             break;
         }
-        if i <= 64 && i % 2 == 0 {
+        if i <= step && i % 2 == 0 {
             tiles.insert(pos.clone());
         }
         if seen.contains(&pos) {
@@ -70,7 +84,7 @@ fn walk(start: &Pos, step: usize, rocks: &HashSet<Pos>) -> usize {
         seen.insert(pos.clone());
         pos.neighbors()
             .iter()
-            .filter(|p| !rocks.contains(&p))
+            .filter(|p| !rocks.contains(&Pos(p.0.rem_euclid(shape.0), p.1.rem_euclid(shape.1))))
             .for_each(|p| {
                 queue.push_back((i + 1, p.clone()));
             });
@@ -80,8 +94,9 @@ fn walk(start: &Pos, step: usize, rocks: &HashSet<Pos>) -> usize {
 
 #[aoc::main()]
 fn main(input: &str) -> (usize, usize) {
-    let (start, rocks) = parse_input(input);
-    let p1 = walk(&start, 64, &rocks);
-    let p2 = 0;
+    let (start, rocks, (cmax, rmax)) = parse_input(input);
+    let p1 = walk(&start, 64, &rocks, (cmax, rmax));
+    let p2 = walk(&start, 100, &rocks, (cmax, rmax));
+    // save_steps(&start, 100, &rocks, (cmax, rmax));
     (p1, p2)
 }
