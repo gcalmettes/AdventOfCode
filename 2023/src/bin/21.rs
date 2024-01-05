@@ -34,11 +34,11 @@ fn display(tiles: &HashSet<Pos>, rocks: &HashSet<Pos>) {
     }
 }
 
-fn save_steps(start: &Pos, step: usize, rocks: &HashSet<Pos>, shape: (isize, isize)) {
+fn save_steps(start: &Pos, max_step: usize, rocks: &HashSet<Pos>, shape: &(isize, isize)) {
     let mut csv = String::from("");
-    for i in (0..=1000).step_by(2) {
+    for i in 0..=max_step {
         println!("{i}");
-        let res = walk(&start, i, &rocks, shape);
+        let res = walk(&start, i, &rocks, &shape);
         csv += &format!("{i},{res}\n");
     }
     std::fs::write("img/21.csv", csv).unwrap();
@@ -66,16 +66,16 @@ fn parse_input(input: &str) -> (Pos, HashSet<Pos>, (isize, isize)) {
     )
 }
 
-fn walk(start: &Pos, step: usize, rocks: &HashSet<Pos>, shape: (isize, isize)) -> usize {
+fn walk(start: &Pos, target: usize, rocks: &HashSet<Pos>, shape: &(isize, isize)) -> usize {
     let mut queue = VecDeque::from_iter([(0, start.clone())]);
     let mut seen = HashSet::<Pos>::new();
     let mut tiles = HashSet::<Pos>::new();
 
     while let Some((i, pos)) = queue.pop_front() {
-        if i > step {
+        if i > target {
             break;
         }
-        if i <= step && i % 2 == 0 {
+        if i <= target && i % 2 == (target % 2) {
             tiles.insert(pos.clone());
         }
         if seen.contains(&pos) {
@@ -92,11 +92,46 @@ fn walk(start: &Pos, step: usize, rocks: &HashSet<Pos>, shape: (isize, isize)) -
     tiles.len()
 }
 
+fn solve_p2(start: &Pos, target: usize, rocks: &HashSet<Pos>, shape: &(isize, isize)) -> usize {
+    // Cycle, 131, size of the grid
+    // Note: 26501365 // 131 == 202300
+    //       26501365 % 131 == 65
+    let s = 65;
+    let cycle = 131;
+    let steps = (0..3).map(|n| s + n * cycle).collect::<Vec<_>>();
+    let tiles_reached = steps
+        .iter()
+        .map(|n| (*n, walk(&start, *n, &rocks, &shape)))
+        .collect::<Vec<_>>();
+
+    // 3 points formula to solve the quadratic formula
+    // We solve P(x) = a*x^2 + b*x + c for different x
+    //
+    // P(0) = a*(65 + 0*131)² + b*(65 + 0*131) + c
+    // P(1) = a*(65 + 1*131)² + b*(65 + 1*131) + c
+    // P(2) = a*(65 + 2*131)² + b*(65 + 2*131) + c
+    //
+    // c = P(0)
+    // we substitute in the others and we find
+    // b = (4*P(1) -3*P(0) - P(2)) / 2
+    // a = P(1) - P(0) - b
+    let c = tiles_reached[0].1;
+    let b = (4 * tiles_reached[1].1 - 3 * tiles_reached[0].1 - tiles_reached[2].1) / 2;
+    let a = tiles_reached[1].1 - tiles_reached[0].1 - b;
+
+    // number of whole tile lenghts
+    // this is 202300
+    let x = (target - s) / cycle;
+
+    // polynomial deg 2
+    a * x.pow(2) + b * x + c
+}
+
 #[aoc::main()]
 fn main(input: &str) -> (usize, usize) {
-    let (start, rocks, (cmax, rmax)) = parse_input(input);
-    let p1 = walk(&start, 64, &rocks, (cmax, rmax));
-    let p2 = walk(&start, 100, &rocks, (cmax, rmax));
-    // save_steps(&start, 100, &rocks, (cmax, rmax));
+    let (start, rocks, shape) = parse_input(input);
+    let p1 = walk(&start, 64, &rocks, &shape);
+    let p2 = solve_p2(&start, 26501365, &rocks, &shape);
+    save_steps(&start, 1000, &rocks, &shape);
     (p1, p2)
 }
