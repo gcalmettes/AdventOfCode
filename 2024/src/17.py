@@ -43,6 +43,8 @@ class Computer:
             if opcode == 3:
                 if not self.A == 0:
                     self.pointer = self.get_literal_operand_value(operand)
+                else:
+                    self.pointer += 2
             if opcode == 4:
                 res = self.B ^ self.C
                 self.B = res
@@ -67,11 +69,12 @@ class Computer:
 
     def run(self):
         while True:
+            if self.pointer >= len(self.program)-1:
+                break
             opcode, operand = self.program[self.pointer:self.pointer+2]
-            print(opcode, operand)
             if not self.step(opcode, operand):
                 break
-        return ",".join(self.out)
+        return ",".join(str(i) for i in self.out)
 
 
 REGISTERS = {
@@ -81,14 +84,22 @@ REGISTERS = {
 }
 PROGRAM = [2,4,1,2,7,5,4,3,0,3,1,7,5,5,3,0]
 
+
+cp = Computer(REGISTERS, PROGRAM)
+p1 = cp.run()
+
 REGISTERS = {
-  "A": 729,
+  "A": 2024,
   "B": 0,
   "C": 0,
 }
-PROGRAM = [0,1,5,4,3,0]
+PROGRAM = [0,3,5,4,3,0]
 
-c = Computer(REGISTERS, PROGRAM)
-r = c.run()
+#117440
 
-print(r)
+p2 = 0
+print(f"part1: {p1}")
+print(f"part2: {p2}")
+
+cp = Computer(REGISTERS, PROGRAM)
+print(cp.run())
