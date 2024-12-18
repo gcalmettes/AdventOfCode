@@ -42,7 +42,7 @@ while Q:
         END[score].append(path)
         continue
     if (r,c,dir) in SEEN:
-        if SCORES[(r,c, dir)] < score:
+        if SCORES[(r,c, dir)] <= score:
             # abort, already same position with lower score
             continue
         else:
