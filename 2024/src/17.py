@@ -1,3 +1,5 @@
+from typing import List
+
 class Computer:
     def __init__(self, registers, program):
         self.A = registers.get("A")
@@ -84,22 +86,37 @@ REGISTERS = {
 }
 PROGRAM = [2,4,1,2,7,5,4,3,0,3,1,7,5,5,3,0]
 
-
 cp = Computer(REGISTERS, PROGRAM)
 p1 = cp.run()
 
-REGISTERS = {
-  "A": 2024,
-  "B": 0,
-  "C": 0,
-}
-PROGRAM = [0,3,5,4,3,0]
+print(f"part1: {p1}")
 
-#117440
+# p2 = sum(d*8**(i+1) for i,d in enumerate(PROGRAM))
+# p2 += sum(d*8**(i+1) for i,d in enumerate([0,1,1,1,1,1,1,1,7,6,5,2,4,5,1,0]))
+# cp = Computer(REGISTERS, PROGRAM)
+# cp.A = p2
+# print(">>", PROGRAM)
+# print("   ", cp.run())
+
+def run_prog(new_A: int) -> List[int]:
+    cp = Computer(REGISTERS, PROGRAM)
+    cp.A = new_A
+    cp.run()
+    return cp.out
+
 
 p2 = 0
-print(f"part1: {p1}")
-print(f"part2: {p2}")
+n = len(PROGRAM)
+for i in range(n):
+    # we build the digits from right to left.
+    want = PROGRAM[n-i-1:]
+    inc = 0
+    while True:
+        new_A = p2 * 8 + inc
+        result = run_prog(new_A)
+        if result == want:
+            p2 = new_A
+            break
+        inc += 1
 
-cp = Computer(REGISTERS, PROGRAM)
-print(cp.run())
+print(f"part2: {p2}")
